@@ -51,6 +51,8 @@ void ChatCommandHandlerStrategy::InitTriggers(std::vector<TriggerNode*>& trigger
     triggers.push_back(
         new TriggerNode("stay", { NextAction("stay chat shortcut", relevance) }));
     triggers.push_back(
+        new TriggerNode("halt", { NextAction("halt chat shortcut", relevance) }));
+    triggers.push_back(
         new TriggerNode("move from group", { NextAction("move from group chat shortcut", relevance) }));
     triggers.push_back(
         new TriggerNode("flee", { NextAction("flee chat shortcut", relevance) }));
@@ -157,6 +159,7 @@ ChatCommandHandlerStrategy::ChatCommandHandlerStrategy(PlayerbotAI* botAI) : Pas
     supported.push_back("emote");
     supported.push_back("buff");
     supported.push_back("help");
+    supported.push_back("halt");
     supported.push_back("gb");
     supported.push_back("bank");
     supported.push_back("invite");

@@ -37,6 +37,14 @@ public:
     bool Execute(Event event) override;
 };
 
+class HaltChatShortcutAction : public PositionsResetAction
+{
+public:
+    HaltChatShortcutAction(PlayerbotAI* botAI) : PositionsResetAction(botAI, "halt chat shortcut") {}
+
+    bool Execute(Event event) override;
+};
+
 class MoveFromGroupChatShortcutAction : public Action
 {
 public:

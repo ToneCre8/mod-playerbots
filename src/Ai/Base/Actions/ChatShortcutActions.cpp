@@ -137,6 +137,25 @@ bool StayChatShortcutAction::Execute(Event /*event*/)
     return true;
 }
 
+bool HaltChatShortcutAction::Execute(Event /*event*/)
+{
+    Player* master = GetMaster();
+    if (!master)
+        return false;
+
+    botAI->Reset();
+    botAI->ChangeStrategy("+stay,+passive,-move from group", BOT_STATE_NON_COMBAT);
+    botAI->ChangeStrategy("+stay,-follow,+passive,-move from group", BOT_STATE_COMBAT);
+    bot->SetSelection(ObjectGuid());
+    bot->AttackStop();
+
+    SetReturnPosition(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ());
+    SetStayPosition(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ());
+
+    botAI->TellMaster("Halting");
+    return true;
+}
+
 bool MoveFromGroupChatShortcutAction::Execute(Event /*event*/)
 {
     Player* master = GetMaster();
