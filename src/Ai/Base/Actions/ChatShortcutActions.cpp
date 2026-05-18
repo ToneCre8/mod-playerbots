@@ -144,7 +144,7 @@ bool HaltChatShortcutAction::Execute(Event /*event*/)
         return false;
 
     botAI->Reset();
-    botAI->ChangeStrategy("+stay,+passive,-move from group", BOT_STATE_NON_COMBAT);
+    botAI->ChangeStrategy("+stay,-follow,+passive,-move from group", BOT_STATE_NON_COMBAT);
     botAI->ChangeStrategy("+stay,-follow,+passive,-move from group", BOT_STATE_COMBAT);
     bot->SetSelection(ObjectGuid());
     bot->AttackStop();
