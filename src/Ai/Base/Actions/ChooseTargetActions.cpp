@@ -45,7 +45,18 @@ bool DropTargetAction::Execute(Event /*event*/)
     {
         ObjectGuid guid = target->GetGUID();
         if (guid)
+        {
             context->GetValue<LootObjectStack*>("available loot")->Get()->Add(guid);
+
+            GuidVector prioritizedTargets = botAI->GetAiObjectContext()->GetValue<GuidVector>("prioritized targets")->Get();
+            GuidVector remainingTargets;
+            for (ObjectGuid prioritizedTarget : prioritizedTargets)
+            {
+                if (prioritizedTarget != guid)
+                    remainingTargets.push_back(prioritizedTarget);
+            }
+            botAI->GetAiObjectContext()->GetValue<GuidVector>("prioritized targets")->Set(remainingTargets);
+        }
     }
 
     // ObjectGuid pullTarget = context->GetValue<ObjectGuid>("pull target")->Get();
