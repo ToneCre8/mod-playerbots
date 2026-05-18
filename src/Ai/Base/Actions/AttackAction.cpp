@@ -43,6 +43,9 @@ bool AttackMyTargetAction::Execute(Event /*event*/)
         return false;
     }
 
+    botAI->ChangeStrategy("-passive", BOT_STATE_NON_COMBAT);
+    botAI->ChangeStrategy("-passive", BOT_STATE_COMBAT);
+
     bool result = Attack(botAI->GetUnit(guid));
     if (result)
         context->GetValue<ObjectGuid>("pull target")->Set(guid);
