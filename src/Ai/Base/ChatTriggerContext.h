@@ -84,6 +84,7 @@ public:
         creators["follow"] = &ChatTriggerContext::follow;
         creators["move from group"] = &ChatTriggerContext::move_from_group;
         creators["stay"] = &ChatTriggerContext::stay;
+        creators["halt"] = &ChatTriggerContext::halt;
         creators["flee"] = &ChatTriggerContext::flee;
         creators["grind"] = &ChatTriggerContext::grind;
         creators["tank attack"] = &ChatTriggerContext::tank_attack;
@@ -201,6 +202,7 @@ private:
     static Trigger* grind(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "grind"); }
     static Trigger* tank_attack(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "tank attack"); }
     static Trigger* stay(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "stay"); }
+    static Trigger* halt(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "halt"); }
     static Trigger* follow(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "follow"); }
     static Trigger* move_from_group(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "move from group"); }
     static Trigger* gb(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "gb"); }
