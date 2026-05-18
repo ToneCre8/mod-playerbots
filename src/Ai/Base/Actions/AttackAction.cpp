@@ -44,7 +44,7 @@ bool AttackMyTargetAction::Execute(Event /*event*/)
     }
 
     botAI->ChangeStrategy("-passive", BOT_STATE_NON_COMBAT);
-    botAI->ChangeStrategy("-passive", BOT_STATE_COMBAT);
+    botAI->ChangeStrategy("-follow,-passive", BOT_STATE_COMBAT);
 
     bool result = Attack(botAI->GetUnit(guid));
     if (result)
