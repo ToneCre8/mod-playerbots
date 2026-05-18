@@ -159,6 +159,8 @@ bool FleeChatShortcutAction::Execute(Event /*event*/)
     botAI->Reset();
     botAI->ChangeStrategy("+follow,-stay,+passive", BOT_STATE_NON_COMBAT);
     botAI->ChangeStrategy("+follow,-stay,+passive", BOT_STATE_COMBAT);
+    bot->SetSelection(ObjectGuid());
+    bot->AttackStop();
 
     ResetReturnPosition();
     ResetStayPosition();
