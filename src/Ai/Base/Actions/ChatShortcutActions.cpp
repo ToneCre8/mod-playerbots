@@ -53,6 +53,11 @@ bool FollowChatShortcutAction::Execute(Event /*event*/)
     botAI->ChangeStrategy("-stay,-follow,-passive,-grind,-move from group", BOT_STATE_COMBAT);
     botAI->GetAiObjectContext()->GetValue<GuidVector>("prioritized targets")->Reset();
     botAI->GetAiObjectContext()->GetValue<ObjectGuid>("pull target")->Set(ObjectGuid::Empty);
+    context->GetValue<Unit*>("current target")->Set(nullptr);
+    bot->SetTarget(ObjectGuid::Empty);
+    bot->SetSelection(ObjectGuid());
+    botAI->ChangeEngine(BOT_STATE_NON_COMBAT);
+    bot->AttackStop();
 
     PositionMap& posMap = context->GetValue<PositionMap&>("position")->Get();
     PositionInfo pos = posMap["return"];
