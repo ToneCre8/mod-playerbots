@@ -10,6 +10,7 @@
 #include "LootAction.h"
 #include "LootObjectStack.h"
 #include "LootStrategyValue.h"
+#include "PlayerbotRepository.h"
 #include "Playerbots.h"
 
 bool LootStrategyAction::Execute(Event event)
@@ -55,6 +56,7 @@ bool LootStrategyAction::Execute(Event event)
             std::ostringstream out;
             out << "Loot strategy set to " << lootStrategy->Get()->GetName();
             botAI->TellMaster(out);
+            PlayerbotRepository::instance().Save(botAI);
             return true;
         }
 
@@ -80,11 +82,13 @@ bool LootStrategyAction::Execute(Event event)
                     alwaysLootItems.erase(j);
 
                 botAI->TellMaster("Item(s) removed from always loot list");
+                PlayerbotRepository::instance().Save(botAI);
             }
             else
             {
                 alwaysLootItems.insert(itemid);
                 botAI->TellMaster("Item(s) added to always loot list");
+                PlayerbotRepository::instance().Save(botAI);
             }
         }
     }

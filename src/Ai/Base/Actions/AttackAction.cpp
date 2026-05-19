@@ -43,8 +43,8 @@ bool AttackMyTargetAction::Execute(Event /*event*/)
         return false;
     }
 
-    botAI->ChangeStrategy("-passive", BOT_STATE_NON_COMBAT);
-    botAI->ChangeStrategy("-follow,-passive", BOT_STATE_COMBAT);
+    botAI->ChangeStrategy("-stay,-passive", BOT_STATE_NON_COMBAT);
+    botAI->ChangeStrategy("-stay,-follow,-passive", BOT_STATE_COMBAT);
     botAI->GetAiObjectContext()->GetValue<GuidVector>("prioritized targets")->Set({guid});
 
     bool result = Attack(botAI->GetUnit(guid));
