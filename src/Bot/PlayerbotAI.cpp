@@ -5,6 +5,7 @@
 
 #include "PlayerbotAI.h"
 
+#include <cctype>
 #include <cmath>
 #include <mutex>
 #include <sstream>
@@ -4258,9 +4259,46 @@ void PlayerbotAI::InterruptSpell()
 
 void PlayerbotAI::RemoveAura(std::string const name)
 {
-    uint32 spellid = aiObjectContext->GetValue<uint32>("spell id", name)->Get();
+    uint32 spellid = 0;
+    bool numeric = !name.empty();
+    for (char c : name)
+    {
+        if (!std::isdigit(static_cast<unsigned char>(c)))
+        {
+            numeric = false;
+            break;
+        }
+    }
+
+    if (numeric)
+        spellid = static_cast<uint32>(atoi(name.c_str()));
+
+    if (!spellid)
+    {
+        PlayerbotChatHandler handler(bot);
+        spellid = handler.extractSpellId(name);
+    }
+
+    if (!spellid)
+        spellid = aiObjectContext->GetValue<uint32>("spell id", name)->Get();
+
     if (spellid && HasAura(spellid, bot))
+    {
         bot->RemoveAurasDueToSpell(spellid);
+        return;
+    }
+
+    for (Unit::AuraApplicationMap::iterator iter = bot->GetAppliedAuras().begin(); iter != bot->GetAppliedAuras().end();)
+    {
+        Aura const* aura = iter->second->GetBase();
+        if (aura && aura->GetSpellInfo() && name == aura->GetSpellInfo()->SpellName[0])
+        {
+            bot->RemoveAura(iter);
+            iter = bot->GetAppliedAuras().begin();
+        }
+        else
+            ++iter;
+    }
 }
 
 void PlayerbotAI::RequestSpellInterrupt()
