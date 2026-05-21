@@ -393,6 +393,89 @@ bool UseHealingPotion::isUseful() { return AI_VALUE2(bool, "combat", "self targe
 
 bool UseManaPotion::isUseful() { return AI_VALUE2(bool, "combat", "self target"); }
 
+namespace
+{
+bool ContainsText(std::string const& text, std::string const& token)
+{
+    return text.find(token) != std::string::npos;
+}
+
+bool IsPreferredScrollForClass(uint8 botClass, std::string const& name)
+{
+    switch (botClass)
+    {
+        case CLASS_WARRIOR:
+        case CLASS_DEATH_KNIGHT:
+            return ContainsText(name, "Strength") || ContainsText(name, "Agility") || ContainsText(name, "Stamina");
+        case CLASS_PALADIN:
+        case CLASS_SHAMAN:
+        case CLASS_DRUID:
+            return ContainsText(name, "Strength") || ContainsText(name, "Agility") || ContainsText(name, "Intellect") ||
+                ContainsText(name, "Spirit") || ContainsText(name, "Stamina");
+        case CLASS_ROGUE:
+        case CLASS_HUNTER:
+            return ContainsText(name, "Agility") || ContainsText(name, "Strength") || ContainsText(name, "Stamina");
+        case CLASS_PRIEST:
+        case CLASS_MAGE:
+        case CLASS_WARLOCK:
+            return ContainsText(name, "Intellect") || ContainsText(name, "Spirit") || ContainsText(name, "Stamina");
+        default:
+            return ContainsText(name, "Stamina");
+    }
+}
+}
+
+Item* UseScrollAction::FindScroll()
+{
+    std::vector<Item*> items = AI_VALUE2(std::vector<Item*>, "inventory items", "scroll");
+    Item* fallback = nullptr;
+
+    for (Item* item : items)
+    {
+        if (!item || bot->CanUseItem(item) != EQUIP_ERR_OK)
+            continue;
+
+        ItemTemplate const* proto = item->GetTemplate();
+        if (!proto || proto->Class != ITEM_CLASS_CONSUMABLE || proto->SubClass != ITEM_SUBCLASS_SCROLL)
+            continue;
+
+        uint32 spellId = 0;
+        for (uint8 i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
+        {
+            spellId = proto->Spells[i].SpellId;
+            if (spellId)
+                break;
+        }
+
+        if (!spellId || bot->HasAura(spellId) || !botAI->CanCastSpell(spellId, bot, false, nullptr, item))
+            continue;
+
+        SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spellId);
+        std::string const spellName = spellInfo ? spellInfo->SpellName[0] : proto->Name1;
+        if (botAI->HasAura(spellName, bot))
+            continue;
+
+        if (!fallback)
+            fallback = item;
+
+        if (IsPreferredScrollForClass(bot->getClass(), spellName) || IsPreferredScrollForClass(bot->getClass(), proto->Name1))
+            return item;
+    }
+
+    return fallback;
+}
+
+bool UseScrollAction::Execute(Event /*event*/)
+{
+    Item* scroll = FindScroll();
+    if (!scroll)
+        return false;
+
+    return UseItemAuto(scroll);
+}
+
+bool UseScrollAction::isUseful() { return !bot->IsInCombat() && FindScroll(); }
+
 bool UseHearthStone::Execute(Event event)
 {
     if (bot->isMoving())

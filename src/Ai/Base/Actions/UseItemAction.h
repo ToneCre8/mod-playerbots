@@ -64,6 +64,18 @@ public:
     bool isUseful() override;
 };
 
+class UseScrollAction : public UseItemAction
+{
+public:
+    UseScrollAction(PlayerbotAI* botAI) : UseItemAction(botAI, "scroll", true) {}
+
+    bool Execute(Event event) override;
+    bool isUseful() override;
+
+private:
+    Item* FindScroll();
+};
+
 class UseHearthStone : public UseItemAction
 {
 public:

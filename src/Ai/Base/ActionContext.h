@@ -117,6 +117,7 @@ public:
         creators["healthstone"] = &ActionContext::healthstone;
         creators["healing potion"] = &ActionContext::healing_potion;
         creators["mana potion"] = &ActionContext::mana_potion;
+        creators["scroll"] = &ActionContext::scroll;
         creators["food"] = &ActionContext::food;
         creators["drink"] = &ActionContext::drink;
         creators["tank assist"] = &ActionContext::tank_assist;
@@ -360,6 +361,7 @@ private:
     static Action* food(PlayerbotAI* botAI) { return new EatAction(botAI); }
     static Action* mana_potion(PlayerbotAI* botAI) { return new UseManaPotion(botAI); }
     static Action* healing_potion(PlayerbotAI* botAI) { return new UseHealingPotion(botAI); }
+    static Action* scroll(PlayerbotAI* botAI) { return new UseScrollAction(botAI); }
     static Action* healthstone(PlayerbotAI* botAI) { return new UseItemAction(botAI, "healthstone"); }
     static Action* move_out_of_enemy_contact(PlayerbotAI* botAI) { return new MoveOutOfEnemyContactAction(botAI); }
     static Action* set_facing(PlayerbotAI* botAI) { return new SetFacingTargetAction(botAI); }
