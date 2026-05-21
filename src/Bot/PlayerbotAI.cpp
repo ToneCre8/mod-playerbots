@@ -263,6 +263,71 @@ void PlayerbotAI::UpdateAI(uint32 elapsed, bool minimal)
             bot->SetPower(bot->getPowerType(), bot->GetMaxPower(bot->getPowerType()));
     }
 
+    auto isRecoveryAuraName = [](char const* expected, char const* actual) -> bool
+    {
+        if (!expected || !actual)
+            return false;
+
+        while (*expected && *actual)
+        {
+            if (std::tolower(static_cast<unsigned char>(*expected)) != std::tolower(static_cast<unsigned char>(*actual)))
+                return false;
+
+            ++expected;
+            ++actual;
+        }
+
+        return !*expected && !*actual;
+    };
+
+    auto removeRecoveryAura = [this, &isRecoveryAuraName](char const* auraName) -> bool
+    {
+        bool removed = false;
+        for (Unit::AuraApplicationMap::iterator iter = bot->GetAppliedAuras().begin(); iter != bot->GetAppliedAuras().end();)
+        {
+            Aura const* aura = iter->second->GetBase();
+            SpellInfo const* spellInfo = aura ? aura->GetSpellInfo() : nullptr;
+            if (spellInfo && isRecoveryAuraName(auraName, spellInfo->SpellName[0]))
+            {
+                bot->RemoveAura(iter);
+                iter = bot->GetAppliedAuras().begin();
+                removed = true;
+            }
+            else
+                ++iter;
+        }
+        return removed;
+    };
+
+    auto hasRecoveryAura = [this, &isRecoveryAuraName](char const* auraName) -> bool
+    {
+        for (Unit::AuraApplicationMap::iterator iter = bot->GetAppliedAuras().begin(); iter != bot->GetAppliedAuras().end(); ++iter)
+        {
+            Aura const* aura = iter->second->GetBase();
+            SpellInfo const* spellInfo = aura ? aura->GetSpellInfo() : nullptr;
+            if (spellInfo && isRecoveryAuraName(auraName, spellInfo->SpellName[0]))
+                return true;
+        }
+        return false;
+    };
+
+    bool removedRecoveryAura = false;
+    if (bot->IsAlive() && nextAICheckDelay > 0)
+    {
+        if (bot->GetHealth() >= bot->GetMaxHealth())
+            removedRecoveryAura = removeRecoveryAura("Food") || removedRecoveryAura;
+
+        if (bot->getPowerType() == POWER_MANA && bot->GetMaxPower(POWER_MANA) > 0 &&
+            bot->GetPower(POWER_MANA) >= bot->GetMaxPower(POWER_MANA))
+            removedRecoveryAura = removeRecoveryAura("Drink") || removedRecoveryAura;
+
+        if (removedRecoveryAura && !hasRecoveryAura("Food") && !hasRecoveryAura("Drink"))
+        {
+            bot->SetStandState(UNIT_STAND_STATE_STAND);
+            nextAICheckDelay = 0;
+        }
+    }
+
     AllowActivity();
 
     if (!CanUpdateAI())
