@@ -8,6 +8,16 @@
 #include "Event.h"
 #include "Playerbots.h"
 
+bool CastPriestWandAction::isUseful()
+{
+    Item* ranged = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_RANGED);
+    if (!ranged || ranged->GetTemplate()->SubClass != ITEM_SUBCLASS_WEAPON_WAND)
+        return false;
+
+    Unit* target = GetTarget();
+    return target && target->IsAlive() && target->IsInWorld() && CastShootAction::isUseful();
+}
+
 bool CastRemoveShadowformAction::Execute(Event /*event*/)
 {
     botAI->RemoveAura("shadowform");

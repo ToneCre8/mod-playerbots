@@ -159,6 +159,7 @@ public:
     {
         creators["power infusion"] = &PriestAiObjectContextInternal::power_infusion;
         creators["inner focus"] = &PriestAiObjectContextInternal::inner_focus;
+        creators["priest wand"] = &PriestAiObjectContextInternal::priest_wand;
         creators["shadow word: pain"] = &PriestAiObjectContextInternal::shadow_word_pain;
         creators["shadow word: pain on attacker"] = &PriestAiObjectContextInternal::shadow_word_pain_on_attacker;
         creators["devouring plague"] = &PriestAiObjectContextInternal::devouring_plague;
@@ -249,6 +250,7 @@ private:
         return new CastShadowProtectionOnPartyAction(botAI);
     }
     static Action* shadow_protection(PlayerbotAI* botAI) { return new CastShadowProtectionAction(botAI); }
+    static Action* priest_wand(PlayerbotAI* botAI) { return new CastPriestWandAction(botAI); }
     static Action* power_infusion(PlayerbotAI* botAI) { return new CastPowerInfusionAction(botAI); }
     static Action* inner_focus(PlayerbotAI* botAI) { return new CastInnerFocusAction(botAI); }
     static Action* dispersion(PlayerbotAI* botAI) { return new CastDispersionAction(botAI); }

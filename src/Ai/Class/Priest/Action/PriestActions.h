@@ -133,6 +133,15 @@ BUFF_ACTION(CastSymbolOfHopeAction, "symbol of hope");
 SPELL_ACTION(CastConsumeMagicAction, "consume magic");
 SNARE_ACTION(CastChastiseAction, "chastise");
 
+class CastPriestWandAction : public CastShootAction
+{
+public:
+    CastPriestWandAction(PlayerbotAI* botAI) : CastShootAction(botAI) {}
+
+    std::string const GetTargetName() override { return "dps target"; }
+    bool isUseful() override;
+};
+
 class CastRemoveShadowformAction : public Action
 {
 public:
