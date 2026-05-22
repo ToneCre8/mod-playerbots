@@ -8,31 +8,46 @@
 #include "Event.h"
 #include "Playerbots.h"
 
+namespace
+{
+bool IsValidPriestWandTarget(Player* bot, Unit* target)
+{
+    return target && target->IsAlive() && target->IsInWorld() && target->GetMapId() == bot->GetMapId() &&
+        target->IsHostileTo(bot);
+}
+}
+
 Unit* CastPriestWandAction::GetTarget()
 {
-    Unit* target = CastShootAction::GetTarget();
-    if (target && target->IsAlive() && target->IsInWorld() && target->GetMapId() == bot->GetMapId() &&
-        target->IsHostileTo(bot))
-    {
-        return target;
-    }
-
     Player* master = GetMaster();
-    if (!master || !botAI->HasActivePlayerMaster())
-        return nullptr;
-
-    ObjectGuid masterTargetGuid = master->GetTarget();
-    if (!masterTargetGuid)
-        return nullptr;
-
-    target = botAI->GetUnit(masterTargetGuid);
-    if (!target || !target->IsAlive() || !target->IsInWorld() || target->GetMapId() != bot->GetMapId() ||
-        !target->IsHostileTo(bot))
+    if (master && botAI->HasActivePlayerMaster())
     {
-        return nullptr;
+        if (ObjectGuid masterTargetGuid = master->GetTarget())
+        {
+            Unit* masterTarget = botAI->GetUnit(masterTargetGuid);
+            if (IsValidPriestWandTarget(bot, masterTarget))
+                return masterTarget;
+        }
     }
 
-    return target;
+    Unit* target = CastShootAction::GetTarget();
+    if (IsValidPriestWandTarget(bot, target))
+        return target;
+
+    return nullptr;
+}
+
+bool CastPriestWandAction::Execute(Event event)
+{
+    Unit* target = GetTarget();
+    if (!target)
+        return false;
+
+    context->GetValue<Unit*>("current target")->Set(target);
+    bot->SetTarget(target->GetGUID());
+    bot->SetSelection(target->GetGUID());
+
+    return CastShootAction::Execute(event);
 }
 
 bool CastPriestWandAction::isUseful()

@@ -140,6 +140,7 @@ public:
 
     std::string const GetTargetName() override { return "dps target"; }
     Unit* GetTarget() override;
+    bool Execute(Event event) override;
     bool isUseful() override;
 };
 
