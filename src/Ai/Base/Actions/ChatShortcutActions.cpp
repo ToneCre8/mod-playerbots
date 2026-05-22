@@ -148,6 +148,7 @@ bool HaltChatShortcutAction::Execute(Event /*event*/)
     botAI->ChangeStrategy("+stay,-follow,+passive,-move from group", BOT_STATE_COMBAT);
     bot->SetSelection(ObjectGuid());
     bot->AttackStop();
+    botAI->PetFollow();
 
     SetReturnPosition(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ());
     SetStayPosition(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ());
