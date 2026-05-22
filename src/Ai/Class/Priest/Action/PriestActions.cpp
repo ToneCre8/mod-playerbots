@@ -30,25 +30,25 @@ Unit* CastPriestWandAction::GetTarget()
         }
     }
 
-    Unit* target = CastShootAction::GetTarget();
+    Unit* target = AI_VALUE(Unit*, "dps target");
     if (IsValidPriestWandTarget(bot, target))
         return target;
 
     return nullptr;
 }
 
-bool CastPriestWandAction::Execute(Event event)
+bool CastPriestWandAction::Execute(Event /*event*/)
 {
     Unit* target = GetTarget();
     if (!target)
         return false;
 
-    context->GetValue<Unit*>("current target")->Set(target);
-    bot->SetTarget(target->GetGUID());
-    bot->SetSelection(target->GetGUID());
-    botAI->ChangeEngine(BOT_STATE_COMBAT);
+    bool const attacked = Attack(target, false);
+    Unit* currentTarget = context->GetValue<Unit*>("current target")->Get();
+    if (!attacked && currentTarget != target)
+        return false;
 
-    return CastShootAction::Execute(event);
+    return botAI->CastSpell("shoot", target);
 }
 
 bool CastPriestWandAction::isUseful()

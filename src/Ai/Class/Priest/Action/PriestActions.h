@@ -6,6 +6,7 @@
 #ifndef _PLAYERBOT_PRIESTACTIONS_H
 #define _PLAYERBOT_PRIESTACTIONS_H
 
+#include "AttackAction.h"
 #include "GenericSpellActions.h"
 #include "PlayerbotAIConfig.h"
 #include "Playerbots.h"
@@ -133,10 +134,10 @@ BUFF_ACTION(CastSymbolOfHopeAction, "symbol of hope");
 SPELL_ACTION(CastConsumeMagicAction, "consume magic");
 SNARE_ACTION(CastChastiseAction, "chastise");
 
-class CastPriestWandAction : public CastShootAction
+class CastPriestWandAction : public AttackAction
 {
 public:
-    CastPriestWandAction(PlayerbotAI* botAI) : CastShootAction(botAI) {}
+    CastPriestWandAction(PlayerbotAI* botAI) : AttackAction(botAI, "priest wand") {}
 
     std::string const GetTargetName() override { return "dps target"; }
     Unit* GetTarget() override;
