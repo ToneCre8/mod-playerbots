@@ -13,7 +13,7 @@ namespace
 bool IsValidPriestWandTarget(Player* bot, Unit* target)
 {
     return target && target->IsAlive() && target->IsInWorld() && target->GetMapId() == bot->GetMapId() &&
-        target->IsHostileTo(bot);
+        bot->IsValidAttackTarget(target);
 }
 }
 
@@ -57,7 +57,7 @@ bool CastPriestWandAction::isUseful()
     if (!ranged || ranged->GetTemplate()->SubClass != ITEM_SUBCLASS_WEAPON_WAND)
         return false;
 
-    return GetTarget() && CastShootAction::isUseful();
+    return GetTarget();
 }
 
 bool CastRemoveShadowformAction::Execute(Event /*event*/)
