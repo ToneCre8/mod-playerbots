@@ -8,14 +8,40 @@
 #include "Event.h"
 #include "Playerbots.h"
 
+Unit* CastPriestWandAction::GetTarget()
+{
+    Unit* target = CastShootAction::GetTarget();
+    if (target && target->IsAlive() && target->IsInWorld() && target->GetMapId() == bot->GetMapId() &&
+        target->IsHostileTo(bot))
+    {
+        return target;
+    }
+
+    Player* master = GetMaster();
+    if (!master || !botAI->HasActivePlayerMaster())
+        return nullptr;
+
+    ObjectGuid masterTargetGuid = master->GetTarget();
+    if (!masterTargetGuid)
+        return nullptr;
+
+    target = botAI->GetUnit(masterTargetGuid);
+    if (!target || !target->IsAlive() || !target->IsInWorld() || target->GetMapId() != bot->GetMapId() ||
+        !target->IsHostileTo(bot))
+    {
+        return nullptr;
+    }
+
+    return target;
+}
+
 bool CastPriestWandAction::isUseful()
 {
     Item* ranged = bot->GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_RANGED);
     if (!ranged || ranged->GetTemplate()->SubClass != ITEM_SUBCLASS_WEAPON_WAND)
         return false;
 
-    Unit* target = GetTarget();
-    return target && target->IsAlive() && target->IsInWorld() && CastShootAction::isUseful();
+    return GetTarget() && CastShootAction::isUseful();
 }
 
 bool CastRemoveShadowformAction::Execute(Event /*event*/)

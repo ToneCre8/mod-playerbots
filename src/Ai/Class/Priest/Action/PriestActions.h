@@ -139,6 +139,7 @@ public:
     CastPriestWandAction(PlayerbotAI* botAI) : CastShootAction(botAI) {}
 
     std::string const GetTargetName() override { return "dps target"; }
+    Unit* GetTarget() override;
     bool isUseful() override;
 };
 
