@@ -54,7 +54,8 @@ bool LootAction::isUseful()
         return true;
 
     LootObject lootObject = AI_VALUE(LootObjectStack*, "available loot")->GetLoot(sPlayerbotAIConfig.lootDistance);
-    return lootObject.skillId == SKILL_SKINNING;
+    return lootObject.skillId == SKILL_SKINNING || lootObject.skillId == SKILL_MINING ||
+        lootObject.skillId == SKILL_HERBALISM;
 }
 
 enum ProfessionSpells

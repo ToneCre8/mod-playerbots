@@ -131,6 +131,7 @@ public:
         creators["range"] = &ChatTriggerContext::range;
         creators["ra"] = &ChatTriggerContext::ra;
         creators["give leader"] = &ChatTriggerContext::give_leader;
+        creators["leader"] = &ChatTriggerContext::leader;
         creators["cheat"] = &ChatTriggerContext::cheat;
         creators["ginvite"] = &ChatTriggerContext::ginvite;
         creators["guild promote"] = &ChatTriggerContext::guild_promote;
@@ -262,6 +263,7 @@ private:
     static Trigger* spell(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "spell"); }
     static Trigger* ready_check(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "ready check"); }
     static Trigger* give_leader(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "give leader"); }
+    static Trigger* leader(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "leader"); }
     static Trigger* cheat(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "cheat"); }
     static Trigger* ginvite(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "ginvite"); }
     static Trigger* guild_promote(PlayerbotAI* botAI) { return new ChatCommandTrigger(botAI, "guild promote"); }

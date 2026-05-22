@@ -187,6 +187,7 @@ public:
         creators["craft"] = &ChatActionContext::craft;
         creators["flag"] = &ChatActionContext::flag;
         creators["give leader"] = &ChatActionContext::give_leader;
+        creators["leader"] = &ChatActionContext::leader;
         creators["cheat"] = &ChatActionContext::cheat;
         creators["ginvite"] = &ChatActionContext::ginvite;
         creators["guild promote"] = &ChatActionContext::guild_promote;
@@ -306,6 +307,7 @@ private:
     static Action* reset_ai(PlayerbotAI* botAI) { return new ResetAiAction(botAI); }
     static Action* gossip_hello(PlayerbotAI* botAI) { return new GossipHelloAction(botAI); }
     static Action* give_leader(PlayerbotAI* botAI) { return new GiveLeaderAction(botAI); }
+    static Action* leader(PlayerbotAI* botAI) { return new PassLeadershipToMasterAction(botAI); }
     static Action* cheat(PlayerbotAI* botAI) { return new CheatAction(botAI); }
     static Action* ginvite(PlayerbotAI* botAI) { return new GuildInviteAction(botAI); }
     static Action* guild_promote(PlayerbotAI* botAI) { return new GuildPromoteAction(botAI); }
