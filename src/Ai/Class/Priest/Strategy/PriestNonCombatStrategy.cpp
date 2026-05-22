@@ -23,6 +23,7 @@ void PriestNonCombatStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
         "party member dead",{ NextAction("remove shadowform", ACTION_CRITICAL_HEAL + 11),
                                                NextAction("resurrection", ACTION_CRITICAL_HEAL + 10) }));
     triggers.push_back(new TriggerNode("often",{ NextAction("apply oil", 1.0f) }));
+    triggers.push_back(new TriggerNode("often", { NextAction("priest wand", ACTION_DEFAULT) }));
     triggers.push_back(
         new TriggerNode("party member critical health",
                        { NextAction("renew on party", ACTION_CRITICAL_HEAL + 3),

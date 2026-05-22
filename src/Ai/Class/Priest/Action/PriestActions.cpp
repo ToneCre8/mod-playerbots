@@ -46,6 +46,7 @@ bool CastPriestWandAction::Execute(Event event)
     context->GetValue<Unit*>("current target")->Set(target);
     bot->SetTarget(target->GetGUID());
     bot->SetSelection(target->GetGUID());
+    botAI->ChangeEngine(BOT_STATE_COMBAT);
 
     return CastShootAction::Execute(event);
 }
