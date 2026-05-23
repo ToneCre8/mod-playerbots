@@ -19,7 +19,7 @@ bool IsRecovering(PlayerbotAI* botAI, Player* bot, char const* auraName)
     {
         Aura const* aura = iter->second->GetBase();
         SpellInfo const* spellInfo = aura ? aura->GetSpellInfo() : nullptr;
-        if (spellInfo && strstri(spellInfo->SpellName[0].c_str(), auraName))
+        if (spellInfo && strstri(spellInfo->SpellName[0], auraName))
             return true;
     }
 
