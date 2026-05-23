@@ -366,6 +366,9 @@ ItemIds EquipAction::SelectInventoryItemsToEquip()
 
 bool EquipUpgradesPacketAction::Execute(Event event)
 {
+    if (botAI->IsRealPlayer())
+        return false;
+
     if (!sPlayerbotAIConfig.autoEquipUpgradeLoot && !sRandomPlayerbotMgr.IsRandomBot(bot))
         return false;
     std::string const source = event.GetSource();

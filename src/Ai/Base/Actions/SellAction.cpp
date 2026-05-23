@@ -13,7 +13,7 @@
 
 namespace
 {
-bool ShouldPreserveTradableEquipment(Item* item)
+bool ShouldPreserveTradableValuable(Item* item)
 {
     if (!item || item->IsSoulBound())
         return false;
@@ -21,6 +21,9 @@ bool ShouldPreserveTradableEquipment(Item* item)
     ItemTemplate const* proto = item->GetTemplate();
     if (!proto || proto->Quality < ITEM_QUALITY_UNCOMMON)
         return false;
+
+    if (proto->Class == ITEM_CLASS_RECIPE)
+        return true;
 
     if (proto->InventoryType == INVTYPE_NON_EQUIP)
         return false;
@@ -118,7 +121,7 @@ void SellAction::Sell(FindItemVisitor* visitor)
 
 void SellAction::Sell(Item* item)
 {
-    if (ShouldPreserveTradableEquipment(item))
+    if (botAI->HasRealPlayerMaster() && ShouldPreserveTradableValuable(item))
         return;
 
     std::ostringstream out;
