@@ -168,12 +168,21 @@ bool ManualMovementAction::Execute(Event event)
     std::string param = event.getParam();
     std::transform(param.begin(), param.end(), param.begin(), [](unsigned char c) { return std::tolower(c); });
 
-    bool& manualMovement = AI_VALUE_REF(bool, "manual movement");
+    Player* target = event.getOwner();
+    PlayerbotAI* targetAI = target ? GET_PLAYERBOT_AI(target) : nullptr;
+    if (!targetAI || !targetAI->IsRealPlayer())
+    {
+        target = bot;
+        targetAI = botAI;
+    }
+
+    bool& manualMovement = targetAI->GetAiObjectContext()->GetValue<bool>("manual movement")->RefGet();
     bool const oldValue = manualMovement;
 
     if (param.empty() || param == "?" || param == "status")
     {
-        botAI->TellMaster(manualMovement ? "Manual movement is enabled" : "Manual movement is disabled");
+        botAI->TellMaster(manualMovement ? "Selfbot combat-only is enabled for master"
+                                         : "Selfbot combat-only is disabled for master");
         return true;
     }
 
@@ -189,24 +198,25 @@ bool ManualMovementAction::Execute(Event event)
     }
     else
     {
-        botAI->TellMaster("Usage: manual movement on|off|?");
+        botAI->TellMaster("Usage: mmove on|off|?");
         return false;
     }
 
     if (manualMovement)
     {
-        AI_VALUE(LastMovement&, "last movement").clear();
-        bot->StopMoving();
-        bot->ClearUnitState(UNIT_STATE_CHASE);
-        bot->ClearUnitState(UNIT_STATE_FOLLOW);
-        if (bot->GetMotionMaster())
-            bot->GetMotionMaster()->Clear();
+        targetAI->GetAiObjectContext()->GetValue<LastMovement&>("last movement")->Get().clear();
+        target->StopMoving();
+        target->ClearUnitState(UNIT_STATE_CHASE);
+        target->ClearUnitState(UNIT_STATE_FOLLOW);
+        if (target->GetMotionMaster())
+            target->GetMotionMaster()->Clear();
     }
 
     if (manualMovement != oldValue)
-        PlayerbotRepository::instance().Save(botAI);
+        PlayerbotRepository::instance().Save(targetAI);
 
-    botAI->TellMaster(manualMovement ? "Manual movement enabled" : "Manual movement disabled");
+    botAI->TellMaster(manualMovement ? "Selfbot combat-only enabled for master"
+                                     : "Selfbot combat-only disabled for master");
     return true;
 }
 

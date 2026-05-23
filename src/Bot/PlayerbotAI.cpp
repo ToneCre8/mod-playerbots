@@ -3996,7 +3996,7 @@ bool PlayerbotAI::CastSpell(uint32 spellId, float x, float y, float z, Item* ite
 
     ObjectGuid oldSel = bot->GetSelectedUnit() ? bot->GetSelectedUnit()->GetGUID() : ObjectGuid();
 
-    if (!bot->isMoving())
+    if (!IsSelfBotCombatOnly() && !bot->isMoving())
         bot->SetFacingTo(bot->GetAngle(x, y));
 
     if (failWithDelay)
@@ -4617,6 +4617,11 @@ bool PlayerbotAI::HasRealPlayerMaster()
 bool PlayerbotAI::HasActivePlayerMaster() { return master && !GET_PLAYERBOT_AI(master); }
 
 bool PlayerbotAI::IsAlt() { return HasRealPlayerMaster() && !sRandomPlayerbotMgr.IsRandomBot(bot); }
+
+bool PlayerbotAI::IsSelfBotCombatOnly()
+{
+    return IsRealPlayer() && aiObjectContext && aiObjectContext->GetValue<bool>("manual movement")->Get();
+}
 
 Player* PlayerbotAI::GetGroupLeader()
 {
@@ -6179,7 +6184,7 @@ int32 PlayerbotAI::GetNearGroupMemberCount(float dis)
 
 bool PlayerbotAI::CanMove()
 {
-    if (aiObjectContext && aiObjectContext->GetValue<bool>("manual movement")->Get())
+    if (IsSelfBotCombatOnly())
         return false;
 
     // Most common checks: confused, stunned, fleeing, jumping, charging. All these

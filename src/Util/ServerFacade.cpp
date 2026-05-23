@@ -6,6 +6,7 @@
 #include "ServerFacade.h"
 #include "Player.h"
 
+#include "Playerbots.h"
 #include "TargetedMovementGenerator.h"
 
 float ServerFacade::GetDistance2d(Unit* unit, WorldObject* wo)
@@ -43,6 +44,12 @@ void ServerFacade::SetFacingTo(Player* bot, WorldObject* wo, bool /*force*/)
 {
     if (!bot)
         return;
+
+    if (PlayerbotAI* botAI = GET_PLAYERBOT_AI(bot))
+    {
+        if (botAI->IsSelfBotCombatOnly())
+            return;
+    }
 
     float angle = bot->GetAngle(wo);
 
