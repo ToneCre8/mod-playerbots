@@ -178,9 +178,13 @@ bool ManualMovementAction::Execute(Event event)
 
     bool& manualMovement = targetAI->GetAiObjectContext()->GetValue<bool>("manual movement")->RefGet();
     bool const oldValue = manualMovement;
+    bool const commandIsOnMaster = targetAI == botAI;
 
     if (param.empty() || param == "?" || param == "status")
     {
+        if (!commandIsOnMaster)
+            return true;
+
         botAI->TellMaster(manualMovement ? "Selfbot combat-only is enabled for master"
                                          : "Selfbot combat-only is disabled for master");
         return true;
@@ -215,8 +219,11 @@ bool ManualMovementAction::Execute(Event event)
     if (manualMovement != oldValue)
         PlayerbotRepository::instance().Save(targetAI);
 
-    botAI->TellMaster(manualMovement ? "Selfbot combat-only enabled for master"
-                                     : "Selfbot combat-only disabled for master");
+    if (commandIsOnMaster)
+    {
+        botAI->TellMaster(manualMovement ? "Selfbot combat-only enabled for master"
+                                         : "Selfbot combat-only disabled for master");
+    }
     return true;
 }
 
