@@ -12,7 +12,18 @@ namespace
 {
 bool IsRecovering(PlayerbotAI* botAI, Player* bot, char const* auraName)
 {
-    return botAI && bot && botAI->HasAura(auraName, bot);
+    if (!botAI || !bot || !auraName)
+        return false;
+
+    for (Unit::AuraApplicationMap::iterator iter = bot->GetAppliedAuras().begin(); iter != bot->GetAppliedAuras().end(); ++iter)
+    {
+        Aura const* aura = iter->second->GetBase();
+        SpellInfo const* spellInfo = aura ? aura->GetSpellInfo() : nullptr;
+        if (spellInfo && strstri(spellInfo->SpellName[0].c_str(), auraName))
+            return true;
+    }
+
+    return false;
 }
 }
 

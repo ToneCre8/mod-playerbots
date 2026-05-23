@@ -72,6 +72,45 @@ std::string& trim(std::string& s);
 
 std::set<std::string> PlayerbotAI::unsecuredCommands;
 
+namespace
+{
+bool IsIgnoredSpell(uint32 spellId, std::set<uint32> const& ignoredSpells)
+{
+    if (!spellId || ignoredSpells.empty())
+        return false;
+
+    if (ignoredSpells.find(spellId) != ignoredSpells.end())
+        return true;
+
+    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spellId);
+    if (!spellInfo)
+        return false;
+
+    std::wstring spellName;
+    if (!Utf8toWStr(spellInfo->SpellName[0], spellName))
+        return false;
+
+    wstrToLower(spellName);
+
+    for (uint32 ignoredSpellId : ignoredSpells)
+    {
+        SpellInfo const* ignoredSpellInfo = sSpellMgr->GetSpellInfo(ignoredSpellId);
+        if (!ignoredSpellInfo)
+            continue;
+
+        std::wstring ignoredSpellName;
+        if (!Utf8toWStr(ignoredSpellInfo->SpellName[0], ignoredSpellName))
+            continue;
+
+        wstrToLower(ignoredSpellName);
+        if (spellName == ignoredSpellName)
+            return true;
+    }
+
+    return false;
+}
+}
+
 PlayerbotChatHandler::PlayerbotChatHandler(Player* pMasterPlayer) : ChatHandler(pMasterPlayer->GetSession()) {}
 
 uint32 PlayerbotChatHandler::extractQuestId(std::string const str)
@@ -3330,6 +3369,10 @@ bool PlayerbotAI::CanCastSpell(uint32 spellid, Unit* target, bool checkHasSpell,
      if (!IsValidUnit(target))
         return false;
 
+    std::set<uint32>& ignoredSpells = aiObjectContext->GetValue<std::set<uint32>&>("skip spells list")->Get();
+    if (IsIgnoredSpell(spellid, ignoredSpells))
+        return false;
+
     if (Pet* pet = bot->GetPet())
         if (pet->HasSpell(spellid))
             return true;
@@ -3490,6 +3533,10 @@ bool PlayerbotAI::CanCastSpell(uint32 spellid, GameObject* goTarget, bool checkH
     if (bot->HasUnitState(UNIT_STATE_LOST_CONTROL))
         return false;
 
+    std::set<uint32>& ignoredSpells = aiObjectContext->GetValue<std::set<uint32>&>("skip spells list")->Get();
+    if (IsIgnoredSpell(spellid, ignoredSpells))
+        return false;
+
     Pet* pet = bot->GetPet();
     if (pet && pet->HasSpell(spellid))
         return true;
@@ -3543,6 +3590,10 @@ bool PlayerbotAI::CanCastSpell(uint32 spellid, GameObject* goTarget, bool checkH
 bool PlayerbotAI::CanCastSpell(uint32 spellid, float x, float y, float z, bool checkHasSpell, Item* itemTarget)
 {
     if (!spellid)
+        return false;
+
+    std::set<uint32>& ignoredSpells = aiObjectContext->GetValue<std::set<uint32>&>("skip spells list")->Get();
+    if (IsIgnoredSpell(spellid, ignoredSpells))
         return false;
 
     Pet* pet = bot->GetPet();
@@ -3616,6 +3667,10 @@ bool PlayerbotAI::CastSpell(uint32 spellId, Unit* target, Item* itemTarget)
 
     SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spellId);
     if (!spellInfo)
+        return false;
+
+    std::set<uint32>& ignoredSpells = aiObjectContext->GetValue<std::set<uint32>&>("skip spells list")->Get();
+    if (IsIgnoredSpell(spellId, ignoredSpells))
         return false;
 
     Pet* pet = bot->GetPet();
@@ -3894,6 +3949,13 @@ bool PlayerbotAI::CastSpell(uint32 spellId, float x, float y, float z, Item* ite
 
     Pet* pet = bot->GetPet();
     SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spellId);
+    if (!spellInfo)
+        return false;
+
+    std::set<uint32>& ignoredSpells = aiObjectContext->GetValue<std::set<uint32>&>("skip spells list")->Get();
+    if (IsIgnoredSpell(spellId, ignoredSpells))
+        return false;
+
     if (pet && pet->HasSpell(spellId))
     {
         bool autocast = false;

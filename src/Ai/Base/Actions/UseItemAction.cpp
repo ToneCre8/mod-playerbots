@@ -26,6 +26,22 @@ bool HasConsumableSpellCategory(ItemTemplate const* proto, uint32 spellCategory)
 
     return false;
 }
+
+bool HasRecoveryAura(PlayerbotAI* botAI, Player* bot, char const* auraName)
+{
+    if (!botAI || !bot || !auraName)
+        return false;
+
+    for (Unit::AuraApplicationMap::iterator iter = bot->GetAppliedAuras().begin(); iter != bot->GetAppliedAuras().end(); ++iter)
+    {
+        Aura const* aura = iter->second->GetBase();
+        SpellInfo const* spellInfo = aura ? aura->GetSpellInfo() : nullptr;
+        if (spellInfo && strstri(spellInfo->SpellName[0].c_str(), auraName))
+            return true;
+    }
+
+    return false;
+}
 }
 
 bool UseItemAction::Execute(Event event)
@@ -286,8 +302,8 @@ bool UseItemAction::UseItem(Item* item, ObjectGuid goGuid, Item* itemTarget, Uni
         if (bot->IsInCombat())
             return false;
 
-        bool const hasFoodAura = botAI->HasAura("Food", bot);
-        bool const hasDrinkAura = botAI->HasAura("Drink", bot);
+        bool const hasFoodAura = HasRecoveryAura(botAI, bot, "food");
+        bool const hasDrinkAura = HasRecoveryAura(botAI, bot, "drink");
         if ((!isFood || hasFoodAura) && (!isDrink || hasDrinkAura))
         {
             botAI->SetNextCheckDelay(2 * IN_MILLISECONDS);
