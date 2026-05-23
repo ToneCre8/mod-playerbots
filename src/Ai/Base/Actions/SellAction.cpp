@@ -11,6 +11,24 @@
 #include "Playerbots.h"
 #include "ItemPackets.h"
 
+namespace
+{
+bool ShouldPreserveTradableEquipment(Item* item)
+{
+    if (!item || item->IsSoulBound())
+        return false;
+
+    ItemTemplate const* proto = item->GetTemplate();
+    if (!proto || proto->Quality < ITEM_QUALITY_UNCOMMON)
+        return false;
+
+    if (proto->InventoryType == INVTYPE_NON_EQUIP)
+        return false;
+
+    return proto->Class == ITEM_CLASS_ARMOR || proto->Class == ITEM_CLASS_WEAPON;
+}
+}
+
 class SellItemsVisitor : public IterateItemsVisitor
 {
 public:
@@ -100,6 +118,9 @@ void SellAction::Sell(FindItemVisitor* visitor)
 
 void SellAction::Sell(Item* item)
 {
+    if (ShouldPreserveTradableEquipment(item))
+        return;
+
     std::ostringstream out;
 
     GuidVector vendors = botAI->GetAiObjectContext()->GetValue<GuidVector>("nearest npcs")->Get();

@@ -5,16 +5,59 @@
 
 #include "AttackAction.h"
 
+#include "CharmInfo.h"
 #include "CreatureAI.h"
 #include "Event.h"
 #include "LastMovementValue.h"
 #include "LootObjectStack.h"
+#include "Pet.h"
+#include "Player.h"
 #include "PlayerbotAI.h"
 #include "Playerbots.h"
 #include "ServerFacade.h"
 #include "SharedDefines.h"
 #include "Unit.h"
 #include "WaitForAttackStrategy.h"
+
+namespace
+{
+bool CommandPetAttack(Player* bot, Unit* target)
+{
+    if (!bot || !target || !bot->IsValidAttackTarget(target))
+        return false;
+
+    Guardian* pet = bot->GetGuardianPet();
+    if (!pet || !pet->IsInWorld() || pet->isDead())
+        return false;
+
+    CharmInfo* charmInfo = pet->GetCharmInfo();
+    if (!charmInfo)
+        return false;
+
+    if (pet->GetVictim() == target && charmInfo->IsCommandAttack())
+        return false;
+
+    pet->ClearUnitState(UNIT_STATE_FOLLOW);
+    pet->AttackStop();
+    pet->SetTarget(target->GetGUID());
+
+    charmInfo->SetIsCommandAttack(true);
+    charmInfo->SetIsAtStay(false);
+    charmInfo->SetIsFollowing(false);
+    charmInfo->SetIsCommandFollow(false);
+    charmInfo->SetIsReturning(false);
+
+    if (Creature* creature = pet->ToCreature())
+    {
+        if (creature->IsAIEnabled)
+            creature->AI()->AttackStart(target);
+        else
+            creature->Attack(target, true);
+    }
+
+    return true;
+}
+}
 
 bool AttackAction::Execute(Event /*event*/)
 {
@@ -54,7 +97,7 @@ bool AttackMyTargetAction::Execute(Event /*event*/)
     return result;
 }
 
-bool AttackAction::Attack(Unit* target, bool /*with_pet*/ /*true*/)
+bool AttackAction::Attack(Unit* target, bool with_pet /*true*/)
 {
     if (!target)
     {
@@ -131,6 +174,9 @@ bool AttackAction::Attack(Unit* target, bool /*with_pet*/ /*true*/)
 
     if (sameTarget && inCombat && sameAttackMode)
     {
+        if (with_pet && CommandPetAttack(bot, target))
+            return true;
+
         if (verbose)
             botAI->TellError("I am already attacking " + std::string(target->GetName()) + ".");
 
@@ -173,28 +219,12 @@ bool AttackAction::Attack(Unit* target, bool /*with_pet*/ /*true*/)
     botAI->ChangeEngine(BOT_STATE_COMBAT);
 
     if (!WaitForAttackStrategy::ShouldWait(botAI))
+    {
         bot->Attack(target, shouldMelee);
-    /* prevent pet dead immediately in group */
-    // if (bot->GetMap()->IsDungeon() && bot->GetGroup() && !target->IsInCombat())
-    // {
-    //     with_pet = false;
-    // }
-    // if (Pet* pet = bot->GetPet())
-    // {
-    //     if (with_pet)
-    //     {
-    //         pet->SetReactState(REACT_DEFENSIVE);
-    //         pet->SetTarget(target->GetGUID());
-    //         pet->GetCharmInfo()->SetIsCommandAttack(true);
-    //         pet->AI()->AttackStart(target);
-    //     }
-    //     else
-    //     {
-    //         pet->SetReactState(REACT_PASSIVE);
-    //         pet->GetCharmInfo()->SetIsCommandFollow(true);
-    //         pet->GetCharmInfo()->IsReturning();
-    //     }
-    // }
+        if (with_pet)
+            CommandPetAttack(bot, target);
+    }
+
     return true;
 }
 
