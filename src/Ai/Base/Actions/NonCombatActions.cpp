@@ -8,8 +8,22 @@
 #include "Event.h"
 #include "Playerbots.h"
 
+namespace
+{
+bool IsRecovering(PlayerbotAI* botAI, Player* bot, char const* auraName)
+{
+    return botAI && bot && botAI->HasAura(auraName, bot);
+}
+}
+
 bool DrinkAction::Execute(Event event)
 {
+    if (IsRecovering(botAI, bot, "Drink"))
+    {
+        botAI->SetNextCheckDelay(2 * IN_MILLISECONDS);
+        return true;
+    }
+
     if (botAI->HasCheat(BotCheatMask::food))
     {
         // if (bot->IsNonMeleeSpellCast(true))
@@ -49,7 +63,7 @@ bool DrinkAction::Execute(Event event)
 
 bool DrinkAction::isUseful()
 {
-    return UseItemAction::isUseful() && AI_VALUE2(bool, "has mana", "self target") &&
+    return !IsRecovering(botAI, bot, "Drink") && UseItemAction::isUseful() && AI_VALUE2(bool, "has mana", "self target") &&
            AI_VALUE2(uint8, "mana", "self target") < 100;
 }
 
@@ -63,6 +77,12 @@ bool DrinkAction::isPossible()
 
 bool EatAction::Execute(Event event)
 {
+    if (IsRecovering(botAI, bot, "Food"))
+    {
+        botAI->SetNextCheckDelay(2 * IN_MILLISECONDS);
+        return true;
+    }
+
     if (botAI->HasCheat(BotCheatMask::food))
     {
         // if (bot->IsNonMeleeSpellCast(true))
@@ -100,7 +120,11 @@ bool EatAction::Execute(Event event)
     return UseItemAction::Execute(event);
 }
 
-bool EatAction::isUseful() { return UseItemAction::isUseful() && AI_VALUE2(uint8, "health", "self target") < 100; }
+bool EatAction::isUseful()
+{
+    return !IsRecovering(botAI, bot, "Food") && UseItemAction::isUseful() &&
+           AI_VALUE2(uint8, "health", "self target") < 100;
+}
 
 bool EatAction::isPossible()
 {

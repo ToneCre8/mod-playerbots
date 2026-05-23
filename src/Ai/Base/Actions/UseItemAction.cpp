@@ -11,6 +11,23 @@
 #include "ItemUsageValue.h"
 #include "Playerbots.h"
 
+namespace
+{
+bool HasConsumableSpellCategory(ItemTemplate const* proto, uint32 spellCategory)
+{
+    if (!proto)
+        return false;
+
+    for (uint8 i = 0; i < MAX_ITEM_PROTO_SPELLS; ++i)
+    {
+        if (proto->Spells[i].SpellId && proto->Spells[i].SpellCategory == spellCategory)
+            return true;
+    }
+
+    return false;
+}
+}
+
 bool UseItemAction::Execute(Event event)
 {
     std::string name = event.getParam();
@@ -261,18 +278,26 @@ bool UseItemAction::UseItem(Item* item, ObjectGuid goGuid, Item* itemTarget, Uni
     }
 
     ItemTemplate const* proto = item->GetTemplate();
-    bool isDrink = proto->Spells[0].SpellCategory == 59;
-    bool isFood = proto->Spells[0].SpellCategory == 11;
+    bool isDrink = HasConsumableSpellCategory(proto, 59);
+    bool isFood = HasConsumableSpellCategory(proto, 11);
     if (proto->Class == ITEM_CLASS_CONSUMABLE &&
         (proto->SubClass == ITEM_SUBCLASS_FOOD || proto->SubClass == ITEM_SUBCLASS_CONSUMABLE) && (isFood || isDrink))
     {
         if (bot->IsInCombat())
             return false;
 
-        // bot->SetStandState(UNIT_STAND_STATE_SIT);
+        bool const hasFoodAura = botAI->HasAura("Food", bot);
+        bool const hasDrinkAura = botAI->HasAura("Drink", bot);
+        if ((!isFood || hasFoodAura) && (!isDrink || hasDrinkAura))
+        {
+            botAI->SetNextCheckDelay(2 * IN_MILLISECONDS);
+            return true;
+        }
+
         botAI->InterruptSpell();
+        bot->SetStandState(UNIT_STAND_STATE_SIT);
         float hp = bot->GetHealthPct();
-        float mp = bot->GetPower(POWER_MANA) * 100.0f / bot->GetMaxPower(POWER_MANA);
+        float mp = bot->GetMaxPower(POWER_MANA) > 0 ? bot->GetPower(POWER_MANA) * 100.0f / bot->GetMaxPower(POWER_MANA) : 100.0f;
         float p = 0.f;
         if (isDrink && isFood)
         {
@@ -286,7 +311,7 @@ bool UseItemAction::UseItem(Item* item, ObjectGuid goGuid, Item* itemTarget, Uni
         }
         else if (isFood)
         {
-            p = std::min(hp, mp);
+            p = hp;
             TellConsumableUse(item, "Eating", p);
         }
 
