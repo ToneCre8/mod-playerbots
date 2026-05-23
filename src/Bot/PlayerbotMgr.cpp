@@ -1052,10 +1052,27 @@ std::vector<std::string> PlayerbotHolder::HandlePlayerbotCommand(char const* arg
 
     if (!strcmp(cmd, "self"))
     {
-        if (GET_PLAYERBOT_AI(master))
+        PlayerbotAI* selfAI = GET_PLAYERBOT_AI(master);
+        bool const selfBotEnabled = selfAI && selfAI->IsRealPlayer();
+        bool const wantsStatus = charname && (!strcmp(charname, "status") || !strcmp(charname, "?"));
+        bool const wantsOn = charname && (!strcmp(charname, "on") || !strcmp(charname, "enable") ||
+                                          !strcmp(charname, "enabled"));
+        bool const wantsOff = charname && (!strcmp(charname, "off") || !strcmp(charname, "disable") ||
+                                           !strcmp(charname, "disabled"));
+
+        if (wantsStatus)
         {
-            messages.push_back("Disable player botAI");
-            delete GET_PLAYERBOT_AI(master);
+            messages.push_back(selfBotEnabled ? "Self-bot is enabled" : "Self-bot is disabled");
+        }
+        else if ((selfBotEnabled && !wantsOn) || wantsOff)
+        {
+            if (selfBotEnabled)
+            {
+                messages.push_back("Self-bot is disabled");
+                delete selfAI;
+            }
+            else
+                messages.push_back("Self-bot is already disabled");
         }
         else if (sPlayerbotAIConfig.selfBotLevel == 0)
             messages.push_back("Self-bot is disabled");
@@ -1063,9 +1080,14 @@ std::vector<std::string> PlayerbotHolder::HandlePlayerbotCommand(char const* arg
             messages.push_back("You do not have permission to enable player botAI");
         else
         {
-            messages.push_back("Enable player botAI");
-            PlayerbotsMgr::instance().AddPlayerbotData(master, true);
-            GET_PLAYERBOT_AI(master)->SetMaster(master);
+            if (selfBotEnabled)
+                messages.push_back("Self-bot is already enabled");
+            else
+            {
+                messages.push_back("Self-bot is enabled");
+                PlayerbotsMgr::instance().AddPlayerbotData(master, true);
+                GET_PLAYERBOT_AI(master)->SetMaster(master);
+            }
         }
 
         return messages;
