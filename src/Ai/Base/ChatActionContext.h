@@ -154,6 +154,7 @@ public:
         creators["follow chat shortcut"] = &ChatActionContext::follow_chat_shortcut;
         creators["stay chat shortcut"] = &ChatActionContext::stay_chat_shortcut;
         creators["halt chat shortcut"] = &ChatActionContext::halt_chat_shortcut;
+        creators["manual movement"] = &ChatActionContext::manual_movement;
         creators["flee chat shortcut"] = &ChatActionContext::flee_chat_shortcut;
         creators["runaway chat shortcut"] = &ChatActionContext::runaway_chat_shortcut;
         creators["move from group chat shortcut"] = &ChatActionContext::move_from_group_chat_shortcut;
@@ -248,6 +249,7 @@ private:
     static Action* runaway_chat_shortcut(PlayerbotAI* botAI) { return new GoawayChatShortcutAction(botAI); }
     static Action* stay_chat_shortcut(PlayerbotAI* botAI) { return new StayChatShortcutAction(botAI); }
     static Action* halt_chat_shortcut(PlayerbotAI* botAI) { return new HaltChatShortcutAction(botAI); }
+    static Action* manual_movement(PlayerbotAI* botAI) { return new ManualMovementAction(botAI); }
     static Action* follow_chat_shortcut(PlayerbotAI* botAI) { return new FollowChatShortcutAction(botAI); }
     static Action* move_from_group_chat_shortcut(PlayerbotAI* botAI) { return new MoveFromGroupChatShortcutAction(botAI); }
     static Action* gb(PlayerbotAI* botAI) { return new GuildBankAction(botAI); }

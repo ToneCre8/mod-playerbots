@@ -925,6 +925,9 @@ bool MovementAction::IsWaitingForLastMove(MovementPriority priority)
 
 bool MovementAction::IsMovingAllowed()
 {
+    if (AI_VALUE(bool, "manual movement"))
+        return false;
+
     return botAI->CanMove();
 }
 

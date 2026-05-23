@@ -5,8 +5,14 @@
 
 #include "ChatShortcutActions.h"
 
+#include <algorithm>
+#include <cctype>
+
 #include "Event.h"
 #include "Formations.h"
+#include "LastMovementValue.h"
+#include "MotionMaster.h"
+#include "PlayerbotRepository.h"
 #include "Playerbots.h"
 #include "PositionValue.h"
 
@@ -154,6 +160,53 @@ bool HaltChatShortcutAction::Execute(Event /*event*/)
     SetStayPosition(bot->GetPositionX(), bot->GetPositionY(), bot->GetPositionZ());
 
     botAI->TellMaster("Halting");
+    return true;
+}
+
+bool ManualMovementAction::Execute(Event event)
+{
+    std::string param = event.getParam();
+    std::transform(param.begin(), param.end(), param.begin(), [](unsigned char c) { return std::tolower(c); });
+
+    bool& manualMovement = AI_VALUE_REF(bool, "manual movement");
+    bool const oldValue = manualMovement;
+
+    if (param.empty() || param == "?" || param == "status")
+    {
+        botAI->TellMaster(manualMovement ? "Manual movement is enabled" : "Manual movement is disabled");
+        return true;
+    }
+
+    if (param == "on" || param == "1" || param == "enable" || param == "enabled" || param == "lock" ||
+        param == "locked")
+    {
+        manualMovement = true;
+    }
+    else if (param == "off" || param == "0" || param == "disable" || param == "disabled" || param == "unlock" ||
+             param == "unlocked")
+    {
+        manualMovement = false;
+    }
+    else
+    {
+        botAI->TellMaster("Usage: manual movement on|off|?");
+        return false;
+    }
+
+    if (manualMovement)
+    {
+        AI_VALUE(LastMovement&, "last movement").clear();
+        bot->StopMoving();
+        bot->ClearUnitState(UNIT_STATE_CHASE);
+        bot->ClearUnitState(UNIT_STATE_FOLLOW);
+        if (bot->GetMotionMaster())
+            bot->GetMotionMaster()->Clear();
+    }
+
+    if (manualMovement != oldValue)
+        PlayerbotRepository::instance().Save(botAI);
+
+    botAI->TellMaster(manualMovement ? "Manual movement enabled" : "Manual movement disabled");
     return true;
 }
 

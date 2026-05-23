@@ -55,6 +55,7 @@
 #include "LootValues.h"
 #include "MaintenanceValues.h"
 #include "ManaSaveLevelValue.h"
+#include "ManualMovementValue.h"
 #include "NearestAdsValue.h"
 #include "NearestCorpsesValue.h"
 #include "NearestFriendlyPlayersValue.h"
@@ -232,6 +233,7 @@ public:
         creators["outfit list"] = &ValueContext::outfit_list_value;
 
         creators["random bot update"] = &ValueContext::random_bot_update_value;
+        creators["manual movement"] = &ValueContext::manual_movement_value;
         creators["nearest non bot players"] = &ValueContext::nearest_non_bot_players;
         creators["new player nearby"] = &ValueContext::new_player_nearby;
         creators["already seen players"] = &ValueContext::already_seen_players;
@@ -491,6 +493,7 @@ private:
     static UntypedValue* aoe_position(PlayerbotAI* botAI) { return new AoePositionValue(botAI); }
     static UntypedValue* outfit_list_value(PlayerbotAI* botAI) { return new OutfitListValue(botAI); }
     static UntypedValue* random_bot_update_value(PlayerbotAI* botAI) { return new RandomBotUpdateValue(botAI); }
+    static UntypedValue* manual_movement_value(PlayerbotAI* botAI) { return new ManualMovementValue(botAI); }
     static UntypedValue* nearest_non_bot_players(PlayerbotAI* botAI) { return new NearestNonBotPlayersValue(botAI); }
     static UntypedValue* skip_spells_list_value(PlayerbotAI* botAI) { return new SkipSpellsListValue(botAI); }
     static UntypedValue* rpg_target(PlayerbotAI* botAI) { return new RpgTargetValue(botAI); }

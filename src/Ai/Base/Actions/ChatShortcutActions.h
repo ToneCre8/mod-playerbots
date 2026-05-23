@@ -45,6 +45,14 @@ public:
     bool Execute(Event event) override;
 };
 
+class ManualMovementAction : public Action
+{
+public:
+    ManualMovementAction(PlayerbotAI* botAI) : Action(botAI, "manual movement") {}
+
+    bool Execute(Event event) override;
+};
+
 class MoveFromGroupChatShortcutAction : public Action
 {
 public:
