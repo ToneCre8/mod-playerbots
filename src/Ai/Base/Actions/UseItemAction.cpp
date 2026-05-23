@@ -5,6 +5,10 @@
 
 #include "UseItemAction.h"
 
+#include <algorithm>
+#include <cctype>
+#include <string>
+
 #include "ChatHelper.h"
 #include "Event.h"
 #include "ItemPackets.h"
@@ -13,6 +17,19 @@
 
 namespace
 {
+bool ContainsNoCase(char const* text, char const* search)
+{
+    if (!text || !search)
+        return false;
+
+    std::string textLower = text;
+    std::string searchLower = search;
+    std::transform(textLower.begin(), textLower.end(), textLower.begin(), [](unsigned char c) { return std::tolower(c); });
+    std::transform(searchLower.begin(), searchLower.end(), searchLower.begin(), [](unsigned char c) { return std::tolower(c); });
+
+    return textLower.find(searchLower) != std::string::npos;
+}
+
 bool HasConsumableSpellCategory(ItemTemplate const* proto, uint32 spellCategory)
 {
     if (!proto)
@@ -36,7 +53,7 @@ bool HasRecoveryAura(PlayerbotAI* botAI, Player* bot, char const* auraName)
     {
         Aura const* aura = iter->second->GetBase();
         SpellInfo const* spellInfo = aura ? aura->GetSpellInfo() : nullptr;
-        if (spellInfo && strstri(spellInfo->SpellName[0], auraName))
+        if (spellInfo && ContainsNoCase(spellInfo->SpellName[0], auraName))
             return true;
     }
 
