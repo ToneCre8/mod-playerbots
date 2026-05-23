@@ -20,6 +20,7 @@
 #include "Define.h"
 #include "Group.h"
 #include "GuildMgr.h"
+#include "LastMovementValue.h"
 #include "ObjectAccessor.h"
 #include "ObjectGuid.h"
 #include "PlayerbotAIConfig.h"
@@ -1054,6 +1055,52 @@ std::vector<std::string> PlayerbotHolder::HandlePlayerbotCommand(char const* arg
     {
         PlayerbotAI* selfAI = GET_PLAYERBOT_AI(master);
         bool const selfBotEnabled = selfAI && selfAI->IsRealPlayer();
+        bool const wantsMove = charname && (!strcmp(charname, "move") || !strcmp(charname, "movement") ||
+                                            !strcmp(charname, "mmove"));
+        if (wantsMove)
+        {
+            char const* moveArg = genderArg;
+            bool const wantsMoveStatus = !moveArg || !strcmp(moveArg, "status") || !strcmp(moveArg, "?");
+            bool const wantsMoveOn = moveArg && (!strcmp(moveArg, "on") || !strcmp(moveArg, "enable") ||
+                                                 !strcmp(moveArg, "enabled"));
+            bool const wantsMoveOff = moveArg && (!strcmp(moveArg, "off") || !strcmp(moveArg, "disable") ||
+                                                  !strcmp(moveArg, "disabled"));
+
+            if (!selfBotEnabled)
+            {
+                messages.push_back("Self-bot AI move is enabled");
+                return messages;
+            }
+
+            bool& manualMovement = selfAI->GetAiObjectContext()->GetValue<bool>("manual movement")->RefGet();
+            if (wantsMoveStatus)
+            {
+                messages.push_back(manualMovement ? "Self-bot AI move is disabled" : "Self-bot AI move is enabled");
+                return messages;
+            }
+
+            if (!wantsMoveOn && !wantsMoveOff)
+            {
+                messages.push_back("usage: self move on|off|status");
+                return messages;
+            }
+
+            manualMovement = wantsMoveOff;
+            if (manualMovement)
+            {
+                selfAI->GetAiObjectContext()->GetValue<LastMovement&>("last movement")->Get().clear();
+                master->StopMoving();
+                master->ClearUnitState(UNIT_STATE_CHASE);
+                master->ClearUnitState(UNIT_STATE_FOLLOW);
+                if (master->GetMotionMaster())
+                    master->GetMotionMaster()->Clear();
+            }
+
+            PlayerbotRepository::instance().Save(selfAI);
+            messages.push_back(manualMovement ? "Self-bot AI move is disabled" : "Self-bot AI move is enabled");
+            return messages;
+        }
+
         bool const wantsStatus = charname && (!strcmp(charname, "status") || !strcmp(charname, "?"));
         bool const wantsOn = charname && (!strcmp(charname, "on") || !strcmp(charname, "enable") ||
                                           !strcmp(charname, "enabled"));
