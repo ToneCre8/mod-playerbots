@@ -7,6 +7,7 @@
 
 #include "Event.h"
 #include "LootAction.h"
+#include "PlayerbotRepository.h"
 #include "Playerbots.h"
 #include "SkipSpellsListValue.h"
 
@@ -24,12 +25,14 @@ bool SkipSpellsListAction::Execute(Event event)
             skipSpells.insert(spellId);
         }
 
+        PlayerbotRepository::instance().Save(botAI);
         cmd = "?";
     }
 
     if (cmd == "reset")
     {
         skipSpells.clear();
+        PlayerbotRepository::instance().Save(botAI);
         botAI->TellMaster("Ignored spell list is empty");
         return true;
     }
@@ -89,6 +92,7 @@ bool SkipSpellsListAction::Execute(Event event)
                 std::ostringstream out;
                 out << chat->FormatSpell(spellInfo) << " removed from ignored spells";
                 botAI->TellMaster(out);
+                PlayerbotRepository::instance().Save(botAI);
                 return true;
             }
         }
@@ -102,6 +106,7 @@ bool SkipSpellsListAction::Execute(Event event)
                 std::ostringstream out;
                 out << chat->FormatSpell(spellInfo) << " added to ignored spells";
                 botAI->TellMaster(out);
+                PlayerbotRepository::instance().Save(botAI);
                 return true;
             }
         }
