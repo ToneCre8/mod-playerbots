@@ -53,6 +53,10 @@ void ChatCommandHandlerStrategy::InitTriggers(std::vector<TriggerNode*>& trigger
     triggers.push_back(
         new TriggerNode("halt", { NextAction("halt chat shortcut", relevance) }));
     triggers.push_back(
+        new TriggerNode("mmove", { NextAction("manual movement", relevance) }));
+    triggers.push_back(
+        new TriggerNode("manual movement", { NextAction("manual movement", relevance) }));
+    triggers.push_back(
         new TriggerNode("move from group", { NextAction("move from group chat shortcut", relevance) }));
     triggers.push_back(
         new TriggerNode("flee", { NextAction("flee chat shortcut", relevance) }));

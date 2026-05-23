@@ -6179,6 +6179,9 @@ int32 PlayerbotAI::GetNearGroupMemberCount(float dis)
 
 bool PlayerbotAI::CanMove()
 {
+    if (aiObjectContext && aiObjectContext->GetValue<bool>("manual movement")->Get())
+        return false;
+
     // Most common checks: confused, stunned, fleeing, jumping, charging. All these
     // states are set when handling certain aura effects. We don't check against
     // UNIT_STATE_ROOT here, because this state is used by vehicles.

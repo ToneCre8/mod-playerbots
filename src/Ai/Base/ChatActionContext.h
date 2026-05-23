@@ -154,6 +154,7 @@ public:
         creators["follow chat shortcut"] = &ChatActionContext::follow_chat_shortcut;
         creators["stay chat shortcut"] = &ChatActionContext::stay_chat_shortcut;
         creators["halt chat shortcut"] = &ChatActionContext::halt_chat_shortcut;
+        creators["mmove"] = &ChatActionContext::manual_movement;
         creators["manual movement"] = &ChatActionContext::manual_movement;
         creators["flee chat shortcut"] = &ChatActionContext::flee_chat_shortcut;
         creators["runaway chat shortcut"] = &ChatActionContext::runaway_chat_shortcut;
