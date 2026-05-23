@@ -12,6 +12,7 @@
 #include "PlayerbotFactory.h"
 #include "AiObjectContext.h"
 #include "Log.h"
+#include "PlayerbotRepository.h"
 #include "RandomPlayerbotMgr.h"
 
 bool ChangeTalentsAction::Execute(Event event)
@@ -26,6 +27,7 @@ bool ChangeTalentsAction::Execute(Event event)
     std::string param = event.getParam();
 
     std::ostringstream out;
+    bool persist = false;
 
     if (!param.empty())
     {
@@ -40,6 +42,7 @@ bool ChangeTalentsAction::Execute(Event event)
                 bot->ActivateSpec(0);
                 out << "Active first talent";
                 botAI->ResetStrategies();
+                persist = true;
             }
             else if (param.find("switch 2") != std::string::npos)
             {
@@ -51,6 +54,7 @@ bool ChangeTalentsAction::Execute(Event event)
                 bot->ActivateSpec(1);
                 out << "Active second talent";
                 botAI->ResetStrategies();
+                persist = true;
             }
         }
         else if (param.find("autopick") != std::string::npos)
@@ -59,6 +63,7 @@ bool ChangeTalentsAction::Execute(Event event)
             factory.InitTalentsTree(true);
             out << "Auto pick talents";
             botAI->ResetStrategies();
+            persist = true;
         }
         else if (param.find("spec list") != std::string::npos)
         {
@@ -67,14 +72,24 @@ bool ChangeTalentsAction::Execute(Event event)
         else if (param.find("spec ") != std::string::npos)
         {
             param = param.substr(5);
-            out << SpecPick(param);
-            botAI->ResetStrategies();
+            std::string const result = SpecPick(param);
+            out << result;
+            if (result.find("Picking ") == 0)
+            {
+                botAI->ResetStrategies();
+                persist = true;
+            }
         }
         else if (param.find("apply ") != std::string::npos)
         {
             param = param.substr(6);
-            out << SpecApply(param);
-            botAI->ResetStrategies();
+            std::string const result = SpecApply(param);
+            out << result;
+            if (result.find("Applying ") == 0)
+            {
+                botAI->ResetStrategies();
+                persist = true;
+            }
         }
         else
         {
@@ -91,6 +106,11 @@ bool ChangeTalentsAction::Execute(Event event)
     }
 
     botAI->TellMaster(out);
+    if (persist)
+    {
+        bot->SaveToDB(false, false);
+        PlayerbotRepository::instance().Save(botAI);
+    }
 
     return true;
 }
