@@ -1133,7 +1133,19 @@ std::vector<std::string> PlayerbotHolder::HandlePlayerbotCommand(char const* arg
             {
                 messages.push_back("Self-bot is enabled");
                 PlayerbotsMgr::instance().AddPlayerbotData(master, true);
-                GET_PLAYERBOT_AI(master)->SetMaster(master);
+                PlayerbotAI* enabledSelfAI = GET_PLAYERBOT_AI(master);
+                enabledSelfAI->SetMaster(master);
+
+                bool& manualMovement = enabledSelfAI->GetAiObjectContext()->GetValue<bool>("manual movement")->RefGet();
+                manualMovement = true;
+                enabledSelfAI->GetAiObjectContext()->GetValue<LastMovement&>("last movement")->Get().clear();
+                master->StopMoving();
+                master->ClearUnitState(UNIT_STATE_CHASE);
+                master->ClearUnitState(UNIT_STATE_FOLLOW);
+                if (master->GetMotionMaster())
+                    master->GetMotionMaster()->Clear();
+                PlayerbotRepository::instance().Save(enabledSelfAI);
+                messages.push_back("Self-bot AI move is disabled");
             }
         }
 
