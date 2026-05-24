@@ -403,6 +403,9 @@ std::vector<Item*> RpgTradeUsefulAction::CanGiveItems(GuidPosition guidPosition)
 
 bool RpgTradeUsefulAction::Execute(Event /*event*/)
 {
+    if (botAI->HasRealPlayerMaster())
+        return false;
+
     GuidPosition guidP = AI_VALUE(GuidPosition, "rpg target");
 
     Player* player = guidP.GetPlayer();
