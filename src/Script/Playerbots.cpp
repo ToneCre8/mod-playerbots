@@ -31,6 +31,8 @@
 #include "RandomPlayerbotMgr.h"
 #include "ScriptMgr.h"
 #include "PlayerbotCommandScript.h"
+#include "PlayerbotRepository.h"
+#include "LastMovementValue.h"
 #include "cmath"
 #include "BattleGroundTactics.h"
 
@@ -465,6 +467,15 @@ public:
 
             if (botAI == nullptr || botAI->IsRealPlayer())
             {
+                if (botAI && botAI->IsRealPlayer())
+                {
+                    bool& manualMovement = botAI->GetAiObjectContext()->GetValue<bool>("manual movement")->RefGet();
+                    manualMovement = false;
+                    botAI->GetAiObjectContext()->GetValue<LastMovement&>("last movement")->Get().clear();
+                    PlayerbotRepository::instance().Save(botAI);
+                    delete botAI;
+                }
+
                 playerbotMgr->LogoutAllBots();
             }
         }
