@@ -63,11 +63,11 @@ bool StayAction::isUseful()
 
 bool SitAction::Execute(Event /*event*/)
 {
-    if (bot->isMoving())
+    if (bot->IsInCombat() || bot->isMoving())
         return false;
 
     bot->SetStandState(UNIT_STAND_STATE_SIT);
     return true;
 }
 
-bool SitAction::isUseful() { return !AI_VALUE2(bool, "moving", "self target"); }
+bool SitAction::isUseful() { return !bot->IsInCombat() && !AI_VALUE2(bool, "moving", "self target"); }

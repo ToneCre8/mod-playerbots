@@ -1646,7 +1646,9 @@ void PlayerbotAI::DoNextAction(bool min)
 
         if (master->IsSitState() && nextAICheckDelay < 1000)
         {
-            if (!bot->isMoving() && distance < 10.0f)
+            if (bot->IsInCombat())
+                bot->SetStandState(UNIT_STAND_STATE_STAND);
+            else if (!bot->isMoving() && distance < 10.0f)
                 bot->SetStandState(UNIT_STAND_STATE_SIT);
         }
         else if (nextAICheckDelay < 1000)
