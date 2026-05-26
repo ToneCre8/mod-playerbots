@@ -7,6 +7,9 @@
 
 #include <algorithm>
 #include <cctype>
+#include <map>
+#include <sstream>
+#include <vector>
 
 #include "Event.h"
 #include "Formations.h"
@@ -15,6 +18,46 @@
 #include "PlayerbotRepository.h"
 #include "Playerbots.h"
 #include "PositionValue.h"
+
+namespace
+{
+struct HaltSnapshot
+{
+    std::vector<std::string> combatStrategies;
+    std::vector<std::string> nonCombatStrategies;
+    std::vector<std::string> deadStrategies;
+    PositionInfo stayPosition;
+    PositionInfo returnPosition;
+};
+
+std::map<ObjectGuid::LowType, HaltSnapshot> haltSnapshots;
+
+std::string JoinStrategies(std::vector<std::string> const& strategies)
+{
+    std::ostringstream out;
+    for (std::vector<std::string>::const_iterator i = strategies.begin(); i != strategies.end(); ++i)
+    {
+        if (i != strategies.begin())
+            out << ",";
+        out << "+" << *i;
+    }
+    return out.str();
+}
+
+void RestoreStrategies(PlayerbotAI* botAI, BotState state, std::vector<std::string> const& strategies)
+{
+    botAI->ClearStrategies(state);
+
+    std::string const joined = JoinStrategies(strategies);
+    if (!joined.empty())
+        botAI->ChangeStrategy(joined, state);
+}
+
+void RestorePosition(PositionMap& posMap, std::string const& key, PositionInfo const& value)
+{
+    posMap[key] = value;
+}
+}
 
 void PositionsResetAction::ResetReturnPosition()
 {
@@ -148,6 +191,33 @@ bool HaltChatShortcutAction::Execute(Event /*event*/)
     Player* master = GetMaster();
     if (!master)
         return false;
+
+    ObjectGuid::LowType const guid = bot->GetGUID().GetCounter();
+    std::map<ObjectGuid::LowType, HaltSnapshot>::iterator snapshot = haltSnapshots.find(guid);
+    if (snapshot != haltSnapshots.end())
+    {
+        PositionMap& posMap = context->GetValue<PositionMap&>("position")->Get();
+
+        RestoreStrategies(botAI, BOT_STATE_COMBAT, snapshot->second.combatStrategies);
+        RestoreStrategies(botAI, BOT_STATE_NON_COMBAT, snapshot->second.nonCombatStrategies);
+        RestoreStrategies(botAI, BOT_STATE_DEAD, snapshot->second.deadStrategies);
+        RestorePosition(posMap, "stay", snapshot->second.stayPosition);
+        RestorePosition(posMap, "return", snapshot->second.returnPosition);
+
+        haltSnapshots.erase(snapshot);
+        botAI->TellMaster("Resuming");
+        return true;
+    }
+
+    HaltSnapshot saved;
+    saved.combatStrategies = botAI->GetStrategies(BOT_STATE_COMBAT);
+    saved.nonCombatStrategies = botAI->GetStrategies(BOT_STATE_NON_COMBAT);
+    saved.deadStrategies = botAI->GetStrategies(BOT_STATE_DEAD);
+
+    PositionMap& posMap = context->GetValue<PositionMap&>("position")->Get();
+    saved.stayPosition = posMap["stay"];
+    saved.returnPosition = posMap["return"];
+    haltSnapshots[guid] = saved;
 
     botAI->Reset();
     botAI->ChangeStrategy("+stay,-follow,+passive,-move from group", BOT_STATE_NON_COMBAT);
