@@ -1251,6 +1251,25 @@ void PlayerbotAI::HandleBotOutgoingPacket(WorldPacket const& packet)
                 IncreaseNextCheckDelay(delaytime);
             return;
         }
+        case SMSG_TRADE_STATUS:
+        {
+            if (IsRealPlayer())
+            {
+                WorldPacket p(packet);
+                p.rpos(0);
+                uint32 status;
+                p >> status;
+
+                if (status == TRADE_STATUS_BEGIN_TRADE && bot->GetTradeData())
+                {
+                    WorldPacket beginTrade(CMSG_BEGIN_TRADE);
+                    bot->GetSession()->HandleBeginTradeOpcode(beginTrade);
+                }
+            }
+
+            botOutgoingPacketHandlers.AddPacket(packet);
+            return;
+        }
         case SMSG_EMOTE:  // do not react to NPC emotes
         {
             WorldPacket p(packet);
