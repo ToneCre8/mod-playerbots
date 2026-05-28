@@ -1264,6 +1264,7 @@ void PlayerbotAI::HandleBotOutgoingPacket(WorldPacket const& packet)
             return;
         }
 <<<<<<< HEAD
+<<<<<<< HEAD
         case SMSG_TRADE_STATUS:
         {
             WorldPacket p(packet);
@@ -1286,6 +1287,8 @@ void PlayerbotAI::HandleBotOutgoingPacket(WorldPacket const& packet)
             botOutgoingPacketHandlers.AddPacket(packet);
             return;
         }
+=======
+>>>>>>> parent of ce75741b (Update PlayerbotAI.cpp)
 =======
 >>>>>>> parent of ce75741b (Update PlayerbotAI.cpp)
         case SMSG_MESSAGECHAT:  // do not react to self or if not ready to reply
