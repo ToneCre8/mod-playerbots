@@ -1263,6 +1263,26 @@ void PlayerbotAI::HandleBotOutgoingPacket(WorldPacket const& packet)
 
             return;
         }
+        case SMSG_TRADE_STATUS:
+        {
+            WorldPacket p(packet);
+            p.rpos(0);
+
+            uint32 status = 0;
+            p >> status;
+
+            if (status == TRADE_STATUS_BEGIN_TRADE && bot->GetTrader() && !GET_PLAYERBOT_AI(bot->GetTrader()))
+            {
+                if (!bot->HasInArc(CAST_ANGLE_IN_FRONT, bot->GetTrader(), sPlayerbotAIConfig.sightDistance))
+                    bot->SetFacingToObject(bot->GetTrader());
+
+                WorldPacket beginPacket(CMSG_BEGIN_TRADE);
+                bot->GetSession()->HandleBeginTradeOpcode(beginPacket);
+            }
+
+            botOutgoingPacketHandlers.AddPacket(packet);
+            return;
+        }
         case SMSG_MESSAGECHAT:  // do not react to self or if not ready to reply
         {
             if (!sPlayerbotAIConfig.randomBotTalk)
