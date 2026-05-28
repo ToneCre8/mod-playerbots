@@ -1253,14 +1253,16 @@ void PlayerbotAI::HandleBotOutgoingPacket(WorldPacket const& packet)
         }
         case SMSG_TRADE_STATUS:
         {
-            if (IsRealPlayer())
-            {
-                WorldPacket p(packet);
-                p.rpos(0);
-                uint32 status;
-                p >> status;
+            WorldPacket p(packet);
+            p.rpos(0);
+            uint32 status;
+            p >> status;
 
-                if (status == TRADE_STATUS_BEGIN_TRADE && bot->GetTradeData())
+            if (status == TRADE_STATUS_BEGIN_TRADE && bot->GetTradeData())
+            {
+                Player* trader = bot->GetTrader();
+                PlayerbotAI* traderAI = trader ? GET_PLAYERBOT_AI(trader) : nullptr;
+                if (trader && (!traderAI || traderAI->IsRealPlayer()))
                 {
                     WorldPacket beginTrade(CMSG_BEGIN_TRADE);
                     bot->GetSession()->HandleBeginTradeOpcode(beginTrade);
