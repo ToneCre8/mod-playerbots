@@ -1271,10 +1271,12 @@ void PlayerbotAI::HandleBotOutgoingPacket(WorldPacket const& packet)
             uint32 status = 0;
             p >> status;
 
-            if (status == TRADE_STATUS_BEGIN_TRADE && bot->GetTrader() && !GET_PLAYERBOT_AI(bot->GetTrader()))
+            Player* trader = bot->GetTrader();
+            PlayerbotAI* traderBotAI = trader ? GET_PLAYERBOT_AI(trader) : nullptr;
+            if (status == TRADE_STATUS_BEGIN_TRADE && trader && (!traderBotAI || traderBotAI->IsRealPlayer()))
             {
-                if (!bot->HasInArc(CAST_ANGLE_IN_FRONT, bot->GetTrader(), sPlayerbotAIConfig.sightDistance))
-                    bot->SetFacingToObject(bot->GetTrader());
+                if (!bot->HasInArc(CAST_ANGLE_IN_FRONT, trader, sPlayerbotAIConfig.sightDistance))
+                    bot->SetFacingToObject(trader);
 
                 WorldPacket beginPacket(CMSG_BEGIN_TRADE);
                 bot->GetSession()->HandleBeginTradeOpcode(beginPacket);
