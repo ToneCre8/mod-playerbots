@@ -128,8 +128,11 @@ bool TradeStatusAction::Execute(Event event)
 void TradeStatusAction::BeginTrade()
 {
     Player* trader = bot->GetTrader();
-    PlayerbotAI* traderBotAI = trader ? GET_PLAYERBOT_AI(trader) : nullptr;
-    if (!trader || (traderBotAI && !traderBotAI->IsRealPlayer()))
+    if (!trader)
+        return;
+
+    PlayerbotAI* traderBotAI = GET_PLAYERBOT_AI(trader);
+    if (!botAI->IsRealPlayer() && traderBotAI && !traderBotAI->IsRealPlayer())
         return;
 
     WorldPacket p;
