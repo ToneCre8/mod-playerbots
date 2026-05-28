@@ -41,9 +41,9 @@ bool TradeAction::Execute(Event event)
             return false;
 
         TradeStatusInfo info;
-        info.Status = TRADE_STATUS_BEGIN_TRADE;
-        info.TraderGuid = bot->GetGUID();
+        info.Status = TRADE_STATUS_OPEN_WINDOW;
         player->GetSession()->SendTradeStatus(info);
+        bot->GetSession()->SendTradeStatus(info);
     }
     else
     {
@@ -59,6 +59,13 @@ bool TradeAction::Execute(Event event)
         WorldPacket packet(CMSG_INITIATE_TRADE);
         packet << player->GetGUID();
         bot->GetSession()->HandleInitiateTradeOpcode(packet);
+
+        if (bot->GetTrader() == player && player->GetTrader() == bot)
+        {
+            WorldPacket beginPacket(CMSG_BEGIN_TRADE);
+            bot->GetSession()->HandleBeginTradeOpcode(beginPacket);
+        }
+
         return true;
     }
 
