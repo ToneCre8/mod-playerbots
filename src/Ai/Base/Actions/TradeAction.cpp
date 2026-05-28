@@ -9,7 +9,6 @@
 #include "ItemCountValue.h"
 #include "ItemVisitors.h"
 #include "PlayerbotAI.h"
-#include "TradeData.h"
 
 bool TradeAction::Execute(Event event)
 {
@@ -22,51 +21,30 @@ bool TradeAction::Execute(Event event)
             return false;
     }
 
-    GuidVector guids = chat->parseGameobjects(text);
-    Player* player = nullptr;
-
-    for (auto& guid : guids)
-        if (guid.IsPlayer())
-            player = ObjectAccessor::FindPlayer(guid);
-
-    if (!player && botAI->GetMaster())
-        player = botAI->GetMaster();
-
-    if (!player)
-        return false;
-
-    if (bot->GetTrader())
+    if (!bot->GetTrader())
     {
-        if (bot->GetTrader() != player)
+        GuidVector guids = chat->parseGameobjects(text);
+        Player* player = nullptr;
+
+        for (auto& guid : guids)
+            if (guid.IsPlayer())
+                player = ObjectAccessor::FindPlayer(guid);
+
+        if (!player && botAI->GetMaster())
+            player = botAI->GetMaster();
+
+        if (!player)
             return false;
 
-        TradeStatusInfo info;
-        info.Status = TRADE_STATUS_OPEN_WINDOW;
-        player->GetSession()->SendTradeStatus(info);
-        bot->GetSession()->SendTradeStatus(info);
-    }
-    else
-    {
-        if (player->GetTrader())
+        if (!player->GetTrader())
         {
-            if (player->GetTrader() != bot)
-                return false;
-
-            // Recover a one-sided stale trade before re-initiating.
-            player->TradeCancel(true);
+            WorldPacket packet(CMSG_INITIATE_TRADE);
+            packet << player->GetGUID();
+            bot->GetSession()->HandleInitiateTradeOpcode(packet);
+            return true;
         }
-
-        WorldPacket packet(CMSG_INITIATE_TRADE);
-        packet << player->GetGUID();
-        bot->GetSession()->HandleInitiateTradeOpcode(packet);
-
-        if (bot->GetTrader() == player && player->GetTrader() == bot)
-        {
-            WorldPacket beginPacket(CMSG_BEGIN_TRADE);
-            bot->GetSession()->HandleBeginTradeOpcode(beginPacket);
-        }
-
-        return true;
+        else if (player->GetTrader() != bot)
+            return false;
     }
 
     uint32 copper = chat->parseMoney(text);

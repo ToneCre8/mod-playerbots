@@ -151,10 +151,6 @@ bool SummonAction::Teleport(Player* summoner, Player* player, bool preserveAuras
     if (!summoner || summoner == player)
         return false;
 
-    static float constexpr MIN_SUMMON_DISTANCE = 100.0f;
-    if (summoner->GetMapId() == player->GetMapId() && player->GetDistance(summoner) <= MIN_SUMMON_DISTANCE)
-        return true;
-
     if (player->GetVehicle())
     {
         botAI->TellError("You cannot summon me while I'm on a vehicle");

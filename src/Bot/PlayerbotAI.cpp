@@ -1263,31 +1263,6 @@ void PlayerbotAI::HandleBotOutgoingPacket(WorldPacket const& packet)
 
             return;
         }
-<<<<<<< HEAD
-        case SMSG_TRADE_STATUS:
-        {
-            WorldPacket p(packet);
-            p.rpos(0);
-
-            uint32 status = 0;
-            p >> status;
-
-            Player* trader = bot->GetTrader();
-            PlayerbotAI* traderBotAI = trader ? GET_PLAYERBOT_AI(trader) : nullptr;
-            if (status == TRADE_STATUS_BEGIN_TRADE && trader && (!traderBotAI || traderBotAI->IsRealPlayer()))
-            {
-                if (!bot->HasInArc(CAST_ANGLE_IN_FRONT, trader, sPlayerbotAIConfig.sightDistance))
-                    bot->SetFacingToObject(trader);
-
-                WorldPacket beginPacket(CMSG_BEGIN_TRADE);
-                bot->GetSession()->HandleBeginTradeOpcode(beginPacket);
-            }
-
-            botOutgoingPacketHandlers.AddPacket(packet);
-            return;
-        }
-=======
->>>>>>> parent of ce75741b (Update PlayerbotAI.cpp)
         case SMSG_MESSAGECHAT:  // do not react to self or if not ready to reply
         {
             if (!sPlayerbotAIConfig.randomBotTalk)

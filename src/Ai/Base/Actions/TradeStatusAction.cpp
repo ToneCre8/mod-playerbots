@@ -24,10 +24,9 @@ bool TradeStatusAction::Execute(Event event)
         return false;
 
     PlayerbotAI* traderBotAI = GET_PLAYERBOT_AI(trader);
-    bool const traderIsBot = traderBotAI && !traderBotAI->IsRealPlayer();
 
     // Allow the master and group members to trade
-    if (trader != master && !traderIsBot && (!bot->GetGroup() || !bot->GetGroup()->IsMember(trader->GetGUID())))
+    if (trader != master && !traderBotAI && (!bot->GetGroup() || !bot->GetGroup()->IsMember(trader->GetGUID())))
     {
         bot->Whisper("I'm kind of busy now", LANG_UNIVERSAL, trader);
         return false;
@@ -42,7 +41,7 @@ bool TradeStatusAction::Execute(Event event)
     // Allow trades from group members or bots
     if ((!bot->GetGroup() || !bot->GetGroup()->IsMember(trader->GetGUID())) &&
         (trader != master || !botAI->GetSecurity()->CheckLevelFor(PLAYERBOT_SECURITY_ALLOW_ALL, true, master)) &&
-        !traderIsBot)
+        !traderBotAI)
     {
         WorldPacket p;
         uint32 status = 0;
@@ -128,8 +127,7 @@ bool TradeStatusAction::Execute(Event event)
 void TradeStatusAction::BeginTrade()
 {
     Player* trader = bot->GetTrader();
-    PlayerbotAI* traderBotAI = trader ? GET_PLAYERBOT_AI(trader) : nullptr;
-    if (!trader || (traderBotAI && !traderBotAI->IsRealPlayer()))
+    if (!trader || GET_PLAYERBOT_AI(bot->GetTrader()))
         return;
 
     WorldPacket p;
@@ -159,8 +157,7 @@ bool TradeStatusAction::CheckTrade()
     if (!bot->GetTradeData() || !trader || !trader->GetTradeData())
         return false;
 
-    PlayerbotAI* traderBotAI = GET_PLAYERBOT_AI(bot->GetTrader());
-    if (!botAI->HasActivePlayerMaster() && traderBotAI && !traderBotAI->IsRealPlayer())
+    if (!botAI->HasActivePlayerMaster() && GET_PLAYERBOT_AI(bot->GetTrader()))
     {
         for (uint32 slot = 0; slot < TRADE_SLOT_TRADED_COUNT; ++slot)
         {
