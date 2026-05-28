@@ -22,37 +22,44 @@ bool TradeAction::Execute(Event event)
             return false;
     }
 
-    if (!bot->GetTrader())
+    GuidVector guids = chat->parseGameobjects(text);
+    Player* player = nullptr;
+
+    for (auto& guid : guids)
+        if (guid.IsPlayer())
+            player = ObjectAccessor::FindPlayer(guid);
+
+    if (!player && botAI->GetMaster())
+        player = botAI->GetMaster();
+
+    if (!player)
+        return false;
+
+    if (bot->GetTrader())
     {
-        GuidVector guids = chat->parseGameobjects(text);
-        Player* player = nullptr;
-
-        for (auto& guid : guids)
-            if (guid.IsPlayer())
-                player = ObjectAccessor::FindPlayer(guid);
-
-        if (!player && botAI->GetMaster())
-            player = botAI->GetMaster();
-
-        if (!player)
+        if (bot->GetTrader() != player)
             return false;
 
-        if (!player->GetTrader())
+        TradeStatusInfo info;
+        info.Status = TRADE_STATUS_BEGIN_TRADE;
+        info.TraderGuid = bot->GetGUID();
+        player->GetSession()->SendTradeStatus(info);
+    }
+    else
+    {
+        if (player->GetTrader())
         {
-            WorldPacket packet(CMSG_INITIATE_TRADE);
-            packet << player->GetGUID();
-            bot->GetSession()->HandleInitiateTradeOpcode(packet);
-            return true;
+            if (player->GetTrader() != bot)
+                return false;
+
+            // Recover a one-sided stale trade before re-initiating.
+            player->TradeCancel(true);
         }
-        else if (player->GetTrader() == bot)
-        {
-            TradeStatusInfo info;
-            info.Status = TRADE_STATUS_BEGIN_TRADE;
-            info.TraderGuid = bot->GetGUID();
-            player->GetSession()->SendTradeStatus(info);
-        }
-        else
-            return false;
+
+        WorldPacket packet(CMSG_INITIATE_TRADE);
+        packet << player->GetGUID();
+        bot->GetSession()->HandleInitiateTradeOpcode(packet);
+        return true;
     }
 
     uint32 copper = chat->parseMoney(text);
