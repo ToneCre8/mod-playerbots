@@ -9,6 +9,7 @@
 #include "ItemCountValue.h"
 #include "ItemVisitors.h"
 #include "PlayerbotAI.h"
+#include "TradeData.h"
 
 bool TradeAction::Execute(Event event)
 {
@@ -43,7 +44,14 @@ bool TradeAction::Execute(Event event)
             bot->GetSession()->HandleInitiateTradeOpcode(packet);
             return true;
         }
-        else if (player->GetTrader() != bot)
+        else if (player->GetTrader() == bot)
+        {
+            TradeStatusInfo info;
+            info.Status = TRADE_STATUS_BEGIN_TRADE;
+            info.TraderGuid = bot->GetGUID();
+            player->GetSession()->SendTradeStatus(info);
+        }
+        else
             return false;
     }
 
