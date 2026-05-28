@@ -4616,7 +4616,14 @@ bool PlayerbotAI::HasRealPlayerMaster()
     return false;
 }
 
-bool PlayerbotAI::HasActivePlayerMaster() { return master && !GET_PLAYERBOT_AI(master); }
+bool PlayerbotAI::HasActivePlayerMaster()
+{
+    if (!master)
+        return false;
+
+    PlayerbotAI* masterBotAI = GET_PLAYERBOT_AI(master);
+    return !masterBotAI || masterBotAI->IsRealPlayer();
+}
 
 bool PlayerbotAI::IsAlt() { return HasRealPlayerMaster() && !sRandomPlayerbotMgr.IsRandomBot(bot); }
 
