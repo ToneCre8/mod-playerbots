@@ -1590,6 +1590,9 @@ void PlayerbotAI::ChangeEngineOnNonCombat()
     {
         aiObjectContext->GetValue<PositionInfo>("pos", "stay")->Reset();
     }
+
+    if (IsAlt() && AI_VALUE(uint8, "bag space") >= 100)
+        TellMasterNoFacing("My bags are full.");
 }
 
 void PlayerbotAI::DoNextAction(bool min)

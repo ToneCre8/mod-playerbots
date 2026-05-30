@@ -234,8 +234,11 @@ static bool HasSoulstoneAura(Unit* unit)
 }
 
 // Use the soulstone item on the bot itself with nc strategy "ss self"
-bool UseSoulstoneSelfAction::Execute(Event /*event*/)
+bool UseSoulstoneSelfAction::Execute(Event event)
 {
+    if (botAI->IsAlt())
+        return UseSoulstoneMasterAction(botAI).Execute(event);
+
     std::vector<Item*> items = AI_VALUE2(std::vector<Item*>, "inventory items", "soulstone");
     if (items.empty())
         return false;
@@ -300,8 +303,11 @@ bool UseSoulstoneMasterAction::Execute(Event /*event*/)
 }
 
 // Use the soulstone item on a tank in the group with nc strategy "ss tank"
-bool UseSoulstoneTankAction::Execute(Event /*event*/)
+bool UseSoulstoneTankAction::Execute(Event event)
 {
+    if (botAI->IsAlt())
+        return UseSoulstoneMasterAction(botAI).Execute(event);
+
     CleanupSoulstoneReservations();
 
     std::vector<Item*> items = AI_VALUE2(std::vector<Item*>, "inventory items", "soulstone");
@@ -368,8 +374,11 @@ bool UseSoulstoneTankAction::Execute(Event /*event*/)
 }
 
 // Use the soulstone item on a healer in the group with nc strategy "ss healer"
-bool UseSoulstoneHealerAction::Execute(Event /*event*/)
+bool UseSoulstoneHealerAction::Execute(Event event)
 {
+    if (botAI->IsAlt())
+        return UseSoulstoneMasterAction(botAI).Execute(event);
+
     CleanupSoulstoneReservations();
 
     std::vector<Item*> items = AI_VALUE2(std::vector<Item*>, "inventory items", "soulstone");

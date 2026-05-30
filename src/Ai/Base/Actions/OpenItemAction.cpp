@@ -9,6 +9,9 @@
 
 bool OpenItemAction::Execute(Event /*event*/)
 {
+    if (botAI->IsAlt() && AI_VALUE(uint8, "bag space") >= 100)
+        return false;
+
     bool foundOpenable = false;
 
     Item* item = botAI->FindOpenableItem();
