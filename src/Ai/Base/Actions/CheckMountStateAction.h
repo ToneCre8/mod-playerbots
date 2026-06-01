@@ -53,7 +53,7 @@ private:
     float CalculateDismountDistance() const;
     float CalculateMountDistance() const;
     void Dismount();
-    bool ShouldFollowMasterMountState(Player* master, bool noAttackers, bool shouldMount) const;
+    bool ShouldFollowMasterMountState(Player* master, bool noAttackers) const;
     bool ShouldDismountForMaster(Player* master) const;
     int32 CalculateMasterMountSpeed(Player* master, const MountData& mountData) const;
     bool CheckForSwiftMount() const;

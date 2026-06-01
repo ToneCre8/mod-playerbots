@@ -46,7 +46,14 @@ bool WarlockConjuredItemTrigger::IsActive()
 
 bool OutOfSoulShardsTrigger::IsActive() { return GetSoulShardCount(botAI->GetBot()) == 0; }
 
-bool TooManySoulShardsTrigger::IsActive() { return GetSoulShardCount(botAI->GetBot()) >= 26; }
+bool TooManySoulShardsTrigger::IsActive()
+{
+    uint32 const shardCount = GetSoulShardCount(botAI->GetBot());
+    if (botAI->IsAlt())
+        return shardCount > 6;
+
+    return shardCount >= 26;
+}
 
 bool OutOfSoulstoneTrigger::IsActive() { return GetSoulstoneCount(botAI->GetBot()) == 0; }
 

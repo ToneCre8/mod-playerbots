@@ -73,14 +73,6 @@ void GenericWarlockStrategy::InitTriggers(std::vector<TriggerNode*>& triggers)
     );
     triggers.push_back(
         new TriggerNode(
-            "too many soul shards",
-            {
-                NextAction("destroy soul shard", 60.0f)
-            }
-        )
-    );
-    triggers.push_back(
-        new TriggerNode(
             "devour magic purge",
             {
                 NextAction("devour magic purge", 50.0f)

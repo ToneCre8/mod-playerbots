@@ -61,6 +61,9 @@ MountData CollectMountData(const Player* bot)
 
 bool CheckMountStateAction::Execute(Event /*event*/)
 {
+    if (botAI->IsRealPlayer())
+        return false;
+
     // Determine if there are no attackers
     bool noAttackers = !AI_VALUE2(bool, "combat", "self target") || !AI_VALUE(uint8, "attacker count");
     bool enemy = AI_VALUE(Unit*, "enemy player target");
@@ -103,7 +106,7 @@ bool CheckMountStateAction::Execute(Event /*event*/)
     // If there is a master and bot not in BG, follow master's mount state regardless of group leader
     if (!noRealMaster && !inBattleground)
     {
-        if (ShouldFollowMasterMountState(master, noAttackers, shouldMount))
+        if (ShouldFollowMasterMountState(master, noAttackers))
             return Mount();
 
         else if (ShouldDismountForMaster(master) && bot->IsMounted())
@@ -132,6 +135,9 @@ bool CheckMountStateAction::Execute(Event /*event*/)
 
 bool CheckMountStateAction::isUseful()
 {
+    if (botAI->IsRealPlayer())
+        return false;
+
     // Not useful when:
     if (botAI->IsInVehicle() || bot->isDead() || bot->HasUnitState(UNIT_STATE_IN_FLIGHT) ||
         !bot->IsOutdoors() || bot->InArena())
@@ -159,8 +165,11 @@ bool CheckMountStateAction::isUseful()
     if (!bot->IsMounted() && !bot->HasWaterWalkAura() && posZ < groundLevel)
         return false;
 
-    // Not useful when bot does not have mount strat and is not currently mounted
-    if (!GET_PLAYERBOT_AI(bot)->HasStrategy("mount", BOT_STATE_NON_COMBAT) && !bot->IsMounted())
+    // Not useful when bot does not have mount strat, is not currently mounted, and is not mirroring a mounted master.
+    bool const masterMounted = master && master != bot && !bot->InBattleground() &&
+        (master->IsMounted() || masterInShapeshiftForm == FORM_TRAVEL || masterInShapeshiftForm == FORM_FLIGHT ||
+         masterInShapeshiftForm == FORM_FLIGHT_EPIC);
+    if (!GET_PLAYERBOT_AI(bot)->HasStrategy("mount", BOT_STATE_NON_COMBAT) && !bot->IsMounted() && !masterMounted)
         return false;
 
     // Not useful when level lower than minimum required
@@ -455,13 +464,13 @@ float CheckMountStateAction::CalculateMountDistance() const
     return std::max(21.0f, baseDistance);
 }
 
-bool CheckMountStateAction::ShouldFollowMasterMountState(Player* master, bool noAttackers, bool shouldMount) const
+bool CheckMountStateAction::ShouldFollowMasterMountState(Player* master, bool noAttackers) const
 {
     bool isMasterMounted = master->IsMounted() || (masterInShapeshiftForm == FORM_FLIGHT ||
                                                     masterInShapeshiftForm == FORM_FLIGHT_EPIC ||
                                                     masterInShapeshiftForm == FORM_TRAVEL);
     return isMasterMounted && !bot->IsMounted() && noAttackers &&
-        shouldMount && !bot->IsInCombat() && botAI->GetState() != BOT_STATE_COMBAT;
+        !bot->IsInCombat() && botAI->GetState() != BOT_STATE_COMBAT;
 }
 
 bool CheckMountStateAction::ShouldDismountForMaster(Player* master) const

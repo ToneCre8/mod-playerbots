@@ -74,6 +74,14 @@ std::set<std::string> PlayerbotAI::unsecuredCommands;
 
 namespace
 {
+bool IsMountSpell(SpellInfo const* spellInfo)
+{
+    return spellInfo &&
+        (spellInfo->Effects[0].ApplyAuraName == SPELL_AURA_MOUNTED ||
+         spellInfo->Effects[1].ApplyAuraName == SPELL_AURA_MOUNTED ||
+         spellInfo->Effects[2].ApplyAuraName == SPELL_AURA_MOUNTED);
+}
+
 bool IsIgnoredSpell(uint32 spellId, std::set<uint32> const& ignoredSpells)
 {
     if (!spellId || ignoredSpells.empty())
@@ -3448,6 +3456,9 @@ bool PlayerbotAI::CanCastSpell(uint32 spellid, Unit* target, bool checkHasSpell,
         return false;
     }
 
+    if (bot->IsMounted() && !IsMountSpell(spellInfo))
+        return false;
+
     if ((bot->GetShapeshiftForm() == FORM_FLIGHT || bot->GetShapeshiftForm() == FORM_FLIGHT_EPIC) && !bot->IsInCombat())
     {
         if (!sPlayerbotAIConfig.logInGroupOnly || (bot->GetGroup() && HasRealPlayerMaster()))
@@ -3577,6 +3588,9 @@ bool PlayerbotAI::CanCastSpell(uint32 spellid, GameObject* goTarget, bool checkH
     if (!spellInfo)
         return false;
 
+    if (bot->IsMounted() && !IsMountSpell(spellInfo))
+        return false;
+
     int32 CastingTime = !spellInfo->IsChanneled() ? spellInfo->CalcCastTime(bot) : spellInfo->GetDuration();
     if (CastingTime > 0 && bot->isMoving())
         return false;
@@ -3693,6 +3707,9 @@ bool PlayerbotAI::CastSpell(uint32 spellId, Unit* target, Item* itemTarget)
 
     SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spellId);
     if (!spellInfo)
+        return false;
+
+    if (bot->IsMounted() && !IsMountSpell(spellInfo))
         return false;
 
     std::set<uint32>& ignoredSpells = aiObjectContext->GetValue<std::set<uint32>&>("skip spells list")->Get();
@@ -3976,6 +3993,9 @@ bool PlayerbotAI::CastSpell(uint32 spellId, float x, float y, float z, Item* ite
     Pet* pet = bot->GetPet();
     SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spellId);
     if (!spellInfo)
+        return false;
+
+    if (bot->IsMounted() && !IsMountSpell(spellInfo))
         return false;
 
     std::set<uint32>& ignoredSpells = aiObjectContext->GetValue<std::set<uint32>&>("skip spells list")->Get();
