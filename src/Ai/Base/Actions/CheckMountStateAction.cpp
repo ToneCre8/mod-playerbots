@@ -64,12 +64,22 @@ bool CheckMountStateAction::Execute(Event /*event*/)
     if (botAI->IsRealPlayer())
         return false;
 
+    master = GetMaster();
+    botInShapeshiftForm = bot->GetShapeshiftForm();
+    masterInShapeshiftForm = master ? master->GetShapeshiftForm() : FORM_NONE;
+
     // Determine if there are no attackers
     bool noAttackers = !AI_VALUE2(bool, "combat", "self target") || !AI_VALUE(uint8, "attacker count");
     bool enemy = AI_VALUE(Unit*, "enemy player target");
     bool dps = AI_VALUE(Unit*, "dps target");
     bool shouldDismount = false;
     bool shouldMount = false;
+    bool inBattleground = bot->InBattleground();
+    bool const noRealMaster = (!master || master == bot);
+    bool const masterMountedOrTraveling = !noRealMaster && !inBattleground &&
+        (master->IsMounted() || masterInShapeshiftForm == FORM_TRAVEL || masterInShapeshiftForm == FORM_FLIGHT ||
+         masterInShapeshiftForm == FORM_FLIGHT_EPIC);
+    bool const keepMountedWithMaster = botAI->IsAlt() && masterMountedOrTraveling;
 
     Unit* currentTarget = AI_VALUE(Unit*, "current target");
     if (currentTarget)
@@ -79,7 +89,7 @@ bool CheckMountStateAction::Execute(Event /*event*/)
         float combatReach = bot->GetCombatReach() + currentTarget->GetCombatReach();
         float distanceToTarget = bot->GetExactDist(currentTarget);
 
-        shouldDismount = (distanceToTarget <= dismountDistance + combatReach);
+        shouldDismount = !keepMountedWithMaster && (distanceToTarget <= dismountDistance + combatReach);
         shouldMount = (distanceToTarget > mountDistance + combatReach);
     }
     else
@@ -99,9 +109,6 @@ bool CheckMountStateAction::Execute(Event /*event*/)
         Dismount();
         return true;
     }
-
-    bool inBattleground = bot->InBattleground();
-    bool const noRealMaster = (!master || master == bot);
 
     // If there is a master and bot not in BG, follow master's mount state regardless of group leader
     if (!noRealMaster && !inBattleground)
