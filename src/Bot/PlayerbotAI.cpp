@@ -82,6 +82,18 @@ bool IsMountSpell(SpellInfo const* spellInfo)
          spellInfo->Effects[2].ApplyAuraName == SPELL_AURA_MOUNTED);
 }
 
+bool ShouldUseMountedMasterTravel(PlayerbotAI* botAI)
+{
+    Player* bot = botAI ? botAI->GetBot() : nullptr;
+    Player* master = botAI ? botAI->GetMaster() : nullptr;
+    if (!bot || !master || master == bot || !botAI->IsAlt() || bot->InBattleground() || !bot->IsMounted())
+        return false;
+
+    ShapeshiftForm const masterForm = master->GetShapeshiftForm();
+    return master->IsMounted() || masterForm == FORM_TRAVEL || masterForm == FORM_FLIGHT ||
+        masterForm == FORM_FLIGHT_EPIC;
+}
+
 bool IsIgnoredSpell(uint32 spellId, std::set<uint32> const& ignoredSpells)
 {
     if (!spellId || ignoredSpells.empty())
@@ -1640,6 +1652,27 @@ void PlayerbotAI::DoNextAction(bool min)
 
         ChangeEngine(BOT_STATE_NON_COMBAT);
         return;
+    }
+
+    if (ShouldUseMountedMasterTravel(this))
+    {
+        aiObjectContext->GetValue<Unit*>("current target")->Set(nullptr);
+        aiObjectContext->GetValue<Unit*>("dps target")->Set(nullptr);
+        aiObjectContext->GetValue<Unit*>("enemy player target")->Set(nullptr);
+        aiObjectContext->GetValue<ObjectGuid>("pull target")->Set(ObjectGuid::Empty);
+        aiObjectContext->GetValue<ObjectGuid>("pull strategy target")->Set(ObjectGuid::Empty);
+        aiObjectContext->GetValue<GuidVector>("prioritized targets")->Set(GuidVector());
+        aiObjectContext->GetValue<GuidVector>("possible targets")->Set(GuidVector());
+        aiObjectContext->GetValue<GuidVector>("possible targets no los")->Set(GuidVector());
+        aiObjectContext->GetValue<GuidVector>("all targets")->Set(GuidVector());
+
+        bot->SetTarget(ObjectGuid::Empty);
+        bot->SetSelection(ObjectGuid());
+        bot->AttackStop();
+        PetFollow();
+
+        if (currentEngine != engines[BOT_STATE_NON_COMBAT])
+            ChangeEngine(BOT_STATE_NON_COMBAT);
     }
 
     // Clear targets if in combat but sticking with old data
