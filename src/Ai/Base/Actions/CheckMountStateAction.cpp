@@ -113,6 +113,9 @@ bool CheckMountStateAction::Execute(Event /*event*/)
     // If there is a master and bot not in BG, follow master's mount state regardless of group leader
     if (!noRealMaster && !inBattleground)
     {
+        if (keepMountedWithMaster)
+            ClearMountedMasterCombatIntent();
+
         if (ShouldFollowMasterMountState(master, noAttackers))
             return Mount();
 
@@ -121,6 +124,9 @@ bool CheckMountStateAction::Execute(Event /*event*/)
             Dismount();
             return true;
         }
+
+        if (keepMountedWithMaster && FollowMountedMaster(master))
+            return true;
 
         return false;
     }
@@ -261,6 +267,41 @@ void CheckMountStateAction::Dismount()
         if (!bot->IsRooted())
             bot->SendMovementFlagUpdate();
     }
+}
+
+void CheckMountStateAction::ClearMountedMasterCombatIntent()
+{
+    context->GetValue<Unit*>("current target")->Set(nullptr);
+    context->GetValue<Unit*>("dps target")->Set(nullptr);
+    context->GetValue<Unit*>("enemy player target")->Set(nullptr);
+    context->GetValue<ObjectGuid>("pull target")->Set(ObjectGuid::Empty);
+    context->GetValue<ObjectGuid>("pull strategy target")->Set(ObjectGuid::Empty);
+    context->GetValue<GuidVector>("prioritized targets")->Set(GuidVector());
+
+    bot->SetTarget(ObjectGuid::Empty);
+    bot->SetSelection(ObjectGuid());
+    bot->AttackStop();
+    botAI->PetFollow();
+}
+
+bool CheckMountStateAction::FollowMountedMaster(Player* master)
+{
+    if (!master || !bot->IsMounted() || !botAI->CanMove())
+        return false;
+
+    if (bot->GetMapId() != master->GetMapId())
+        return false;
+
+    if (ServerFacade::instance().IsDistanceLessOrEqualThan(ServerFacade::instance().GetDistance2d(bot, master),
+                                                           sPlayerbotAIConfig.followDistance))
+        return false;
+
+    if (bot->GetMotionMaster()->GetCurrentMovementGeneratorType() == FOLLOW_MOTION_TYPE)
+        return false;
+
+    bot->GetMotionMaster()->Clear();
+    bot->GetMotionMaster()->MoveFollow(master, sPlayerbotAIConfig.followDistance, 0.0f);
+    return true;
 }
 
 void CheckMountStateAction::CompleteDismount(Player* bot)
