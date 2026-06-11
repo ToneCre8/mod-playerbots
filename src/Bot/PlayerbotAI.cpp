@@ -7,6 +7,7 @@
 
 #include <cctype>
 #include <cmath>
+#include <map>
 #include <mutex>
 #include <sstream>
 #include <string>
@@ -92,6 +93,75 @@ bool ShouldUseMountedMasterTravel(PlayerbotAI* botAI)
     ShapeshiftForm const masterForm = master->GetShapeshiftForm();
     return master->IsMounted() || masterForm == FORM_TRAVEL || masterForm == FORM_FLIGHT ||
         masterForm == FORM_FLIGHT_EPIC;
+}
+
+struct MountedMasterTravelSnapshot
+{
+    std::vector<std::string> combatStrategies;
+    std::vector<std::string> nonCombatStrategies;
+    std::vector<std::string> deadStrategies;
+};
+
+std::map<ObjectGuid::LowType, MountedMasterTravelSnapshot> mountedMasterTravelSnapshots;
+
+std::string JoinStrategies(std::vector<std::string> const& strategies)
+{
+    std::ostringstream out;
+    for (std::vector<std::string>::const_iterator i = strategies.begin(); i != strategies.end(); ++i)
+    {
+        if (i != strategies.begin())
+            out << ",";
+        out << "+" << *i;
+    }
+    return out.str();
+}
+
+void RestoreStrategies(PlayerbotAI* botAI, BotState state, std::vector<std::string> const& strategies)
+{
+    botAI->ClearStrategies(state);
+
+    std::string const joined = JoinStrategies(strategies);
+    if (!joined.empty())
+        botAI->ChangeStrategy(joined, state);
+}
+
+void EnterMountedMasterTravel(PlayerbotAI* botAI)
+{
+    Player* bot = botAI ? botAI->GetBot() : nullptr;
+    if (!bot)
+        return;
+
+    ObjectGuid::LowType const guid = bot->GetGUID().GetCounter();
+    if (mountedMasterTravelSnapshots.find(guid) != mountedMasterTravelSnapshots.end())
+        return;
+
+    MountedMasterTravelSnapshot snapshot;
+    snapshot.combatStrategies = botAI->GetStrategies(BOT_STATE_COMBAT);
+    snapshot.nonCombatStrategies = botAI->GetStrategies(BOT_STATE_NON_COMBAT);
+    snapshot.deadStrategies = botAI->GetStrategies(BOT_STATE_DEAD);
+    mountedMasterTravelSnapshots[guid] = snapshot;
+
+    botAI->Reset(false);
+    botAI->ChangeStrategy("+runaway,-stay", BOT_STATE_NON_COMBAT);
+    botAI->ChangeStrategy("+runaway,-stay", BOT_STATE_COMBAT);
+}
+
+void RestoreMountedMasterTravel(PlayerbotAI* botAI)
+{
+    Player* bot = botAI ? botAI->GetBot() : nullptr;
+    if (!bot)
+        return;
+
+    ObjectGuid::LowType const guid = bot->GetGUID().GetCounter();
+    std::map<ObjectGuid::LowType, MountedMasterTravelSnapshot>::iterator snapshot =
+        mountedMasterTravelSnapshots.find(guid);
+    if (snapshot == mountedMasterTravelSnapshots.end())
+        return;
+
+    RestoreStrategies(botAI, BOT_STATE_COMBAT, snapshot->second.combatStrategies);
+    RestoreStrategies(botAI, BOT_STATE_NON_COMBAT, snapshot->second.nonCombatStrategies);
+    RestoreStrategies(botAI, BOT_STATE_DEAD, snapshot->second.deadStrategies);
+    mountedMasterTravelSnapshots.erase(snapshot);
 }
 
 bool IsIgnoredSpell(uint32 spellId, std::set<uint32> const& ignoredSpells)
@@ -1655,25 +1725,9 @@ void PlayerbotAI::DoNextAction(bool min)
     }
 
     if (ShouldUseMountedMasterTravel(this))
-    {
-        aiObjectContext->GetValue<Unit*>("current target")->Set(nullptr);
-        aiObjectContext->GetValue<Unit*>("dps target")->Set(nullptr);
-        aiObjectContext->GetValue<Unit*>("enemy player target")->Set(nullptr);
-        aiObjectContext->GetValue<ObjectGuid>("pull target")->Set(ObjectGuid::Empty);
-        aiObjectContext->GetValue<ObjectGuid>("pull strategy target")->Set(ObjectGuid::Empty);
-        aiObjectContext->GetValue<GuidVector>("prioritized targets")->Set(GuidVector());
-        aiObjectContext->GetValue<GuidVector>("possible targets")->Set(GuidVector());
-        aiObjectContext->GetValue<GuidVector>("possible targets no los")->Set(GuidVector());
-        aiObjectContext->GetValue<GuidVector>("all targets")->Set(GuidVector());
-
-        bot->SetTarget(ObjectGuid::Empty);
-        bot->SetSelection(ObjectGuid());
-        bot->AttackStop();
-        PetFollow();
-
-        if (currentEngine != engines[BOT_STATE_NON_COMBAT])
-            ChangeEngine(BOT_STATE_NON_COMBAT);
-    }
+        EnterMountedMasterTravel(this);
+    else
+        RestoreMountedMasterTravel(this);
 
     // Clear targets if in combat but sticking with old data
     if (currentEngine == engines[BOT_STATE_NON_COMBAT] && bot->IsInCombat())
